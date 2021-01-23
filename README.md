@@ -20,6 +20,6 @@ To specify an experiment, create a new experiment directory in `experiment` and 
 
 Once the three files above are specified, user can run the MCMC specified by `experiment_dir` by calling 
     
-    python experiment.py experiments/experiment_dir   
+    python run_exp.py experiments/experiment_dir   
 
 Check out an example given in `experiments/five_on_five.py`. 

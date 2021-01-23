@@ -2,7 +2,9 @@ import networkx as nx
 import warnings
 from utils.minimal_ordering import LEXM
 from utils.prime_components import primecomps
-class Graph: 
+import copy
+
+class Graph: # undirected, unweigheted graph 
     def  __init__(self, n, dol=None):
         if dol is not None: 
             if len(dol) != n:
@@ -30,14 +32,35 @@ class Graph:
                 if i in self._dol[j]: 
                     EdgeL.append((i,j))
         return EdgeL 
+    def IsEdge(self, i, j): 
+        if i < len(self) and j < len(self): 
+            return (j in self._dol[i])
+        else: 
+            return None
+    def EdgeCount(self):
+        count = 0
+        for i in range(len(self._dol)):
+            for j in range(i+1, len(self._dol)):
+                if i in self._dol[j]: 
+                    count += 1
+        return count
     def __repr__(self): 
         return self._dol.__str__()
     def __str__(self): 
         return self._dol.__str__()
+    def __len__(self):
+        return len(self._dol)
+    def __eq__(self, other): 
+        return self._dol == other._dol
+    def copy(self): 
+        return copy.deepcopy(self)
+    
     def Draw(self): 
         nx.draw_circular(nx.from_dict_of_lists(self._dol), with_labels=True)
         
     # Manually Setting 
+    def SetFromG(self, other): 
+        self._dol = other._dol
     def SetFromDOL(self,dol): 
         self._dol = dol 
     def SetFromAdjM(self, AdjM): 

@@ -5,9 +5,10 @@ import copy
 import time
 import warnings
 import pickle
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.use('Agg') # to not display plots
 from utils.diagnostics import ACF, IAC_time
-
 
 class MCMC_Sampler: 
     def __init__(self, prior, proposal, likelihood, data, reps=1):
@@ -73,10 +74,10 @@ class MCMC_Sampler:
             self.time[rep] = time.time() - tic # in seconds 
             self.iter[rep] = it
 
-            if summarize: 
-                self.Summarize()
+        if summarize: 
+            self.Summarize()
 
-            return 0 
+        return 0 
     
     def SaveRaw(self, outfile): 
         with open(outfile, 'wb') as handle:
@@ -110,9 +111,29 @@ class MCMC_Sampler:
             self.summary[rep]['ITER'] = len(self.res[rep]['SAMPLES'])
     
     
-    def GetTrace(self, dof, outfile, burnin=0): # TODO: thinning
+    def GetTrace(self, dof, outfile, additional_dicts = None, list_first=True, burnin=0): # TODO: thinning
+        assert self.reps == len(additional_dicts), "reps and number of additional dicts does not match"
+        
         # dof is a dictionary of functions from one element of MCMC_Sampler.res to floats
-        rownames = list(dof.keys())
+        lod = []
+        if additional_dicts is not None and list_first:
+            for rep in range(self.reps):
+                d = additional_dicts[rep]
+                for k,f in dof.items(): 
+                    d[k] = [f(p) for p in self.res[rep]['SAMPLES'][burnin:]]
+                lod.append(d)
+        elif additional_dicts is not None and not list_first: 
+            for rep in range(self.reps):
+                d = {dof[k]: [f(p) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
+                for k,v in additional_dict: 
+                    d[k] = v
+                lod.append(d)
+        else: 
+            for rep in range(self.reps):
+                d = {dof[k]: [f(p) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
+                lod.append(d)
+
+        rownames = list(lod[0].keys())
                 
         # SETTING UP GRIDS FOR PLOTTING
         if self.reps > 10:
@@ -127,12 +148,13 @@ class MCMC_Sampler:
         for i in range(self.reps): 
             axs[0,i].set_title("rep" + str(i), fontsize=20)
         for i in range(len(rownames)): 
-            axs[i, 0].set_ylabel(rownames[i], fontsize=20)
+            axs[i,0].set_ylabel(rownames[i], fontsize=20)
 
         # FOR EVERY TYPE 
-        for _,f in dof.items():
-            for rep in range(self.reps):
-                axs[rowidx, rep].plot([f(p) for p in self.res[rep]['SAMPLES'][burnin:]])
-                
+        for rep in range(self.reps):
+            ctr = 0
+            for v in lod[rep].values():    
+                axs[ctr, rep].plot(v)
+                ctr = ctr + 1
         fig.savefig(outfile, dpi=250, bbox_inches='tight')
         return fig         

@@ -1,8 +1,11 @@
 import networkx as nx 
 import warnings
+import numpy as np
+import copy
 from utils.minimal_ordering import LEXM
 from utils.prime_components import primecomps
-import copy
+
+
 
 class Graph: # undirected, unweigheted graph 
     def  __init__(self, n, dol=None):
@@ -55,8 +58,8 @@ class Graph: # undirected, unweigheted graph
     def copy(self): 
         return copy.deepcopy(self)
     
-    def Draw(self): 
-        nx.draw_circular(nx.from_dict_of_lists(self._dol), with_labels=True)
+    def Draw(self, ax=None):
+        nx.draw_circular(nx.from_dict_of_lists(self._dol), ax=ax, with_labels=True)
         
     # Manually Setting 
     def SetFromG(self, other): 

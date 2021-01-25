@@ -24,3 +24,15 @@ def IAC_time(a, M = None):
     
     corr = np.array([ np.sum(a[i:] * a[:n - i]) / (n-i) for i in range(n)]) / normalising
     return 1 + 2 * np.sum(corr[:M])
+
+def create_edge_matrix(samples): 
+    n = len(samples[0])
+    edge_M = np.zeros((n,n))
+    for g in samples:
+        for k, li in g.GetDOL().items(): 
+            for v in li: 
+                if k > v:
+                    edge_M[k,v] +=1
+                    edge_M[v,k] +=1
+    edge_M = edge_M/len(samples)
+    return edge_M

@@ -72,8 +72,8 @@ class Graph: # undirected, unweigheted graph
         for i in range(AdjM.shape[0]):
             for j in  range(i+1, (AdjM.shape[0])): 
                 if AdjM[i,j]: 
-                    self_.dol[i].append(j)
-                    self_.dol[j].append(i)
+                    self._dol[i].append(j)
+                    self._dol[j].append(i)
     def SetFromEdgeL(self, EdgeL): 
         self.SetEmpty()
         self.AddEdges(EdgeL)

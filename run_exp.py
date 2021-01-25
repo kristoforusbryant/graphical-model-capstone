@@ -6,10 +6,12 @@ from utils.diagnostics import create_edge_matrix
 import PIL
 import matplotlib.pyplot as plt
 from utils.Graph import Graph
+from utils.laplace_approximation import constrained_cov
+from utils.G_Wishart import G_Wishart
 
 # Get Input project dir 
 exppath = str(sys.argv[1]) 
-#exppath = "experiments/five_on_five"
+# exppath = "experiments/five_on_five"
 
 ### Read config file 
 filename=os.path.join(exppath, "config.json")
@@ -79,17 +81,43 @@ for i in range(len(DATA)):
     g = Graph(n)
     g.SetFromAdjM(AdjM)
     
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
-    PARAMS[i].Draw(ax = axes[0])
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
+    import networkx as nx
+    pos = nx.spring_layout(g.GetDOL(), seed=84)
+    PARAMS[i].Draw(ax = axes[0], pos=pos)
     axes[0].set_title('true', fontsize=20)
-    g.Draw(ax = axes[1]) 
+    pos = nx.spring_layout(g.GetDOL(), seed=84)
+    g.Draw(ax = axes[1], pos=pos) 
     axes[1].set_title('predicted', fontsize=20)
-    fig.tight_layout()
+    
+    # Plot decreasing likelihoods
+    data = DATA[i]
+    U = data.transpose() @ data 
+    res = {'IG_prior': [],'IG_postr': []}
 
-    filename = exppath + '/vis/' + "Graphs"+str(i)+".png"
+    all_graphs = Graph.get_all_graphs(n)
+    for g in all_graphs:
+        D_star = constrained_cov(g.GetDOL(), D + U, np.eye(n))
+        GW_prior = G_Wishart(g, delta, D)
+        GW_postr = G_Wishart(g, delta + data.shape[0], D_star)
+        res['IG_prior'].append(GW_prior.IG())
+        res['IG_postr'].append(GW_postr.IG())
+    
+    import pandas as pd 
+    df = pd.DataFrame(res)
+    df['loglik'] = df['IG_postr'] - df['IG_prior'] 
+    df.sort_values(by='loglik', ascending=False, inplace=True)
+    df.reset_index(inplace=True)
+    df.loglik[:50].plot.line(ax = axes[2])
+    axes[2].set_title('largest likelihoods', fontsize=20)
+    
+    fig.tight_layout()
+    
+    filename = exppath + '/vis/' + "Header"+str(i)+".png"
     fig.savefig(filename, dpi=250, bbox_inches='tight')
     
-    list_im = [exppath + '/vis/' + im for im in ["Graphs"+str(i)+".png", 'trace'+str(i)+'.png']]
+    #Combining with trace plot
+    list_im = [exppath + '/vis/' + im for im in ["Header"+str(i)+".png", 'trace'+str(i)+'.png']]
     imgs    = [ PIL.Image.open(i) for i in list_im ]
     new_im = PIL.Image.new(imgs[0].mode, (imgs[1].size[0], imgs[0].size[1]))
     new_im.paste(imgs[0])

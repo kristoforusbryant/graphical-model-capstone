@@ -1,12 +1,10 @@
 import numpy as np
 from utils.laplace_approximation import constrained_cov
 from utils.G_Wishart import G_Wishart
-from dists.params.graph import Param 
+# works as long as Param has .GetDOL() function and ._dol property 
 
 class Likelihood:
-    def __init__(self, data, delta, D, param=None):
-        if param is None: 
-            param = Param(D.shape[0])
+    def __init__(self, data, delta, D, param):
         # GW: G-Wishart(G, delta, D)
         self.GW_prior = G_Wishart(param, delta, D)
         self._D = D 
@@ -26,4 +24,4 @@ class Likelihood:
         return self.GW_posterior.IG() - self.GW_prior.IG()# as log prob 
     
     def ParamType(): 
-        return Param.__name__
+        return param.__name__

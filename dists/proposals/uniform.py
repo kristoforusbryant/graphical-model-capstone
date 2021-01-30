@@ -1,10 +1,10 @@
 import random 
 from itertools import combinations
-from dists.params.graph import Param 
 
 class Proposal:
-    def __init__(self,n):
+    def __init__(self,n,Param):
         self._n = n          
+        self._Param = Param
     def Sample(self, param):
         i,j = random.choice(list(combinations(list(param.GetDOL().keys()), 2)))
         param_ = param.copy()
@@ -13,4 +13,4 @@ class Proposal:
     def PDF(self, p0, p1):
         return 0 
     def ParamType(): 
-        return Param.__name__
+        return self._Param.__name__

@@ -69,4 +69,8 @@ def primecomps(dol):
                 if v not in dol.keys(): 
                     vert_l.remove(v)
     primes.append(A.union(C_list[i]))
+    for p in primes: 
+        if p in separators: 
+            primes.remove(p) 
+            separators.remove(p)
     return (primes, separators)

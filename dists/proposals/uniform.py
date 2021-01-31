@@ -2,7 +2,7 @@ import random
 from itertools import combinations
 
 class Proposal:
-    def __init__(self,n,Param):
+    def __init__(self, n, Param):
         self._n = n          
         self._Param = Param
     def Sample(self, param):
@@ -12,5 +12,5 @@ class Proposal:
         return param_ 
     def PDF(self, p0, p1):
         return 0 
-    def ParamType(): 
+    def ParamType(self): 
         return self._Param.__name__

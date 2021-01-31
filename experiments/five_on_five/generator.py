@@ -26,11 +26,12 @@ from utils.Graph import Graph
 n = CONFIG['N_NODES'][0] # graphs are manually design here
 
 import importlib
+Param = importlib.import_module("dists.params.graph").Param
 Prior = importlib.import_module("dists.priors.uniform").Prior
-prior = Prior(n) 
+prior = Prior(n, Param) 
 
 # Empty Graph 
-empty = Graph(n)
+empty = Param(n)
 
 # Circle Graph 
 def circle_graph(n):
@@ -38,7 +39,7 @@ def circle_graph(n):
     dol[0] = [1, n-1]
     dol[n-1] = [0, n-2]
     return dol 
-circle = Graph(n, circle_graph(n))
+circle = Param(n, circle_graph(n))
 
 # Random Graphs on 5 nodes 
 np.random.seed(CONFIG['SEED'])

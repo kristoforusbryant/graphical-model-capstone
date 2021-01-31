@@ -22,8 +22,11 @@ def IAC_time(a, M = None):
     a = a - a_bar # de-mean a 
     normalising = np.sum(a * a) / len(a)
     
-    corr = np.array([ np.sum(a[i:] * a[:n - i]) / (n-i) for i in range(n)]) / normalising
-    return 1 + 2 * np.sum(corr[:M])
+    if normalising == 0: 
+        return np.nan
+    else: 
+        corr = np.array([ np.sum(a[i:] * a[:n - i]) / (n-i) for i in range(n)]) / normalising
+        return 1 + 2 * np.sum(corr[:M])
 
 def create_edge_matrix(samples): 
     n = len(samples[0])

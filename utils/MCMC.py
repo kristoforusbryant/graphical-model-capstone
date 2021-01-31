@@ -30,15 +30,14 @@ class MCMC_Sampler:
         
     def Run(self, it=7500, summarize=False): 
         tic = time.time()
-        # Initialisation 
-        params = self.prior.Sample()
-        lik_p = self.lik.PDF(params) 
-        prior_p = self.prior.PDF(params)
-        print(params)
-        print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
-        
         # Sampler
         for rep in range(self.reps): 
+            # Initialisation 
+            params = self.prior.Sample()
+            lik_p = self.lik.PDF(params) 
+            prior_p = self.prior.PDF(params)
+            print(params)
+            print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
             for i in tqdm(range(it)):
                 params_ = self.prop.Sample(params)
                 self.res[rep]['PARAMS'].append(params_.copy())
@@ -138,7 +137,7 @@ class MCMC_Sampler:
         # SETTING UP GRIDS FOR PLOTTING
         if self.reps > 10:
             warnings.warn("large number of repetition, each subplot may be too small to read")
-        fig, axs = plt.subplots(len(rownames), self.reps, figsize=(25,25))
+        fig, axs = plt.subplots(len(rownames), self.reps, figsize=(25,25), sharex='col', sharey='row')
         fig.tight_layout()
         for i in range(len(rownames)): 
             for j in range(self.reps):

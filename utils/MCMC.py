@@ -33,9 +33,10 @@ class MCMC_Sampler:
         tic = time.time()
         
         if trackProposed: 
-            self.res['LIK_'] = []
-            self.res['PRIOR_'] = []
-            self.res['PROP_'] = []
+            for rep in reps: 
+                self.res[rep]['LIK_'] = []
+                self.res[rep]['PRIOR_'] = []
+                self.res[rep]['PROP_'] = []
         
         # Sampler
         for rep in range(self.reps): 

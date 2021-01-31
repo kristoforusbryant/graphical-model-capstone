@@ -54,7 +54,7 @@ def OneThread(i):
     lik = Likelihood(DATA[i], 3, D, PARAMS[i].__class__)
     
     sampler = MCMC_Sampler(prior, prop, lik, DATA[i], reps=reps)
-    sampler.Run(CONFIG['ITER'][i], summarize=True)
+    sampler.Run(CONFIG['ITER'][i], summarize=True, trackProposed=True)
     
     sampler.SaveRaw(os.path.join(exppath, 'res/raw_'+str(i)+'.pkl'))
     sampler.SaveSummary(os.path.join(exppath, 'summary/summary_'+str(i)+'.pkl'))

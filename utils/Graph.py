@@ -111,11 +111,14 @@ class Graph: # undirected, unweigheted graph
             self.FlipEdge(i,j)
             
     # Other Graph Transformations 
-    def GetSubgraph(self, nodes): 
-        new = {i:[] for i in nodes}
+    def GetSubgraph(self, nodes, keepNodes=True): 
+        if keepNodes: 
+            new = {i:[] for i in self._dol.keys()}
+        else:
+            new = {i:[] for i in nodes}
         for i in nodes:
             new[i] = list(set(self._dol[i]).intersection(set(nodes)))
-        return new 
+        return Graph(len(self._dol), new) 
     def GetComplement(self): 
         new = {i:[] for i in self._dol.keys()}
         for i in self._dol.keys(): 
@@ -155,6 +158,19 @@ class Graph: # undirected, unweigheted graph
         if key in visited: 
             return True 
         else: return False
+    
+    def find_one_cycle(self, now, prev, visited):
+        for v in self._dol[now]: 
+            if v == prev: continue
+            if v in visited:
+                idx = next(i for i in range(len(visited)) if visited[i] == v)
+                return visited[idx:] 
+            else: 
+                cycle = self.find_one_cycle(v, now, visited + [v])
+                if cycle: 
+                    return cycle  
+        else: 
+            return None 
     
     def IsConnnected(self, v, w): 
         return self.DFS(v, w, set())

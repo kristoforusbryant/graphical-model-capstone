@@ -40,7 +40,9 @@ with open(filename, 'rb') as handle:
     
 ### Run the MCMC 
 from utils.MCMC import MCMC_Sampler
-for i in range(len(DATA)): 
+from multiprocessing import Pool 
+
+def OneThread(i):
     n = DATA[i].shape[1]
     reps = CONFIG["N_REPS"][i]
     
@@ -56,7 +58,31 @@ for i in range(len(DATA)):
     
     sampler.SaveRaw(os.path.join(exppath, 'res/raw_'+str(i)+'.pkl'))
     sampler.SaveSummary(os.path.join(exppath, 'summary/summary_'+str(i)+'.pkl'))
+    
+p = Pool()
+p.map(OneThread, range(len(DATA)))
 
+def OnePlot(i):
+    n = DATA[i].shape[1]
+    reps = CONFIG["N_REPS"][i]
+    
+    # Initialise prior, prop, lik, data 
+    prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis)
+    prop = Proposal(n, PARAMS[i].__class__)
+    delta = 3 
+    D = np.eye(n) # (delta, D) hyperpriors
+    lik = Likelihood(DATA[i], 3, D, PARAMS[i].__class__)
+    
+    with open(os.path.join(exppath, 'res/raw_'+str(i)+'.pkl'), 'rb') as handle: 
+        res = pickle.load(handle) 
+    
+    sampler = MCMC_Sampler(prior, prop, lik, DATA[i], reps=reps)
+    sampler.res = res
+    
+    # Define the statistics to be traced
+    burnin = CONFIG['BURNIN'][i]
+    truncate = 8
+    
     # Define the statistics to be traced
     triu = np.triu_indices(n, 1) # upper-tri indices 
     triu_edge_list = [(triu[0][i], triu[1][i]) for i in range(len(triu[0]))]
@@ -67,7 +93,7 @@ for i in range(len(DATA)):
     
     # Plot Traces
     fig = sampler.GetTrace(dof, os.path.join(exppath, 'vis') + "/trace" + str(i) + '.png', 
-                           additional_dicts = add_dicts, list_first=True, burnin=0) # CONFIG['BURNIN'][i]
+                           additional_dicts = add_dicts, list_first=True, burnin=burnin) # CONFIG['BURNIN'][i]
     
     # Plot True and Preidcted Graphs
     AdjM_list = [create_edge_matrix(rep['SAMPLES']) for rep in sampler.res]
@@ -123,3 +149,6 @@ for i in range(len(DATA)):
     imgs_comb = PIL.Image.fromarray(imgs_comb)
     
     imgs_comb.save( exppath + '/vis/'+'vis'+str(i)+'.png' )
+    
+p = Pool()
+p.map(OnePlot, range(len(DATA)))

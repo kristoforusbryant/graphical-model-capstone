@@ -60,7 +60,11 @@ class Graph: # undirected, unweigheted graph
     
     def Draw(self, **kwargs):
         nx.draw(nx.from_dict_of_lists(self._dol), with_labels=True, **kwargs)
-        
+    def GetCirclePos(self): 
+        theta = 2 * np.pi / len(self._dol) 
+        keys = list(self._dol.keys())
+        return {keys[i]: [-np.cos(theta * i), np.sin(theta * i)] for i in range(len(self._dol))}
+    
     # Manually Setting 
     def SetFromG(self, other): 
         self._dol = other._dol

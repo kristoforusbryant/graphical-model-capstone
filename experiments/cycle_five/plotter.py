@@ -72,8 +72,14 @@ def OnePlot(i):
     triu_edge_list = [(triu[0][i], triu[1][i]) for i in range(len(triu[0]))]
     dof = {"(" + str(i) + "," + str(j) + ")" : lambda x,i=i,j=j: x.IsEdge(i, j) 
            for i,j in triu_edge_list}
-    add_dicts = [{"posterior": np.array(sampler.res[rep]['LIK'][burnin:]) + 
-                  np.array(sampler.res[rep]['PRIOR'][burnin:])} for rep in range(reps)]
+    
+    add_dicts = []
+    for rep in range(reps):
+        d = {
+            "posterior": np.array(sampler.res[rep]['LIK'][burnin:]) + np.array(sampler.res[rep]['PRIOR'][burnin:])
+            "posterior_prop": np.array(sampler.res[rep]['LIK_'][burnin:]) + np.array(sampler.res[rep]['PRIOR_'][burnin:])   
+        }
+        add_dicts.append(d)
     
     # Plot Traces
     fig = sampler.GetTrace(dof, 'vis' + "/trace" + str(i) + '.png', 
@@ -89,11 +95,9 @@ def OnePlot(i):
     g.SetFromAdjM(AdjM)
     
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
-    import networkx as nx
-    pos = nx.spring_layout(g.GetDOL(), seed=84)
+    pos = g.GetCirclePos()
     PARAMS[i].Draw(ax = axes[0], pos=pos)
     axes[0].set_title('true', fontsize=20)
-    pos = nx.spring_layout(g.GetDOL(), seed=84)
     g.Draw(ax = axes[1], pos=pos) 
     axes[1].set_title('predicted', fontsize=20)
     

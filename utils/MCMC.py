@@ -23,13 +23,20 @@ class MCMC_Sampler:
                     'LIK':[], 
                     'PRIOR':[], 
                     'PROP':[]} for _ in range(reps)]
+            
         self.time = [0.0 for _ in range(reps)]
         self.iter = [0 for _ in range(reps)]
         self.summary = [{} for _ in range (reps)]
         self.reps = reps
         
-    def Run(self, it=7500, summarize=False): 
+    def Run(self, it=7500, summarize=False, trackProposed=False): 
         tic = time.time()
+        
+        if trackProposed: 
+            self.res['LIK_'] = []
+            self.res['PRIOR_'] = []
+            self.res['PROP_'] = []
+        
         # Sampler
         for rep in range(self.reps): 
             # Initialisation 
@@ -40,12 +47,18 @@ class MCMC_Sampler:
             print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
             for i in tqdm(range(it)):
                 params_ = self.prop.Sample(params)
+                
                 self.res[rep]['PARAMS'].append(params_.copy())
 
                 lik_p_ = self.lik.PDF(params_)
                 prior_p_ = self.prior.PDF(params_)
                 prop_p_ = self.prop.PDF(params_, params ) # params_ -> params
                 prop_p = self.prop.PDF(params, params_) # params -> params_
+                
+                if trackProposed: 
+                    self.res[rep]['LIK_'].append(lik_p_) 
+                    self.res[rep]['PRIOR_'].append(prior_p_)
+                    self.res[rep]['PROP_'].append((prop_p, prop_p_))
 
                 lik_r = lik_p_ - lik_p 
                 prior_r = prior_p_ - prior_p 

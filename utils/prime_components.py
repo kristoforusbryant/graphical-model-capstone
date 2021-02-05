@@ -1,9 +1,10 @@
 from .minimal_ordering import * 
 import copy 
-def graph_union(d0,d1): 
+def graph_union(d0,d1):
+    d = copy.deepcopy(d0)
     for k, l in d1.items(): 
-        d0[k] = list(set(d0[k]).union(set(d1[k])))
-    return d0
+        d[k] = list(set(d[k]).union(set(d1[k])))
+    return d
 
 def F(dol, orderings=None):
     if orderings is None: 
@@ -18,11 +19,7 @@ def F(dol, orderings=None):
         dol = graph_union(dol, F_dol)
     return graph_union(dol, F_dol)
 
-def C(dol, v, ordering=None, F_dol=None):
-    if ordering is None: 
-        ordering = LEXM(dol)
-    if F_dol is None: 
-        F_dol = F(dol, ordering)
+def C(F_dol, v, ordering):
     return set([w for w in F_dol[v] if ordering.index(w) > ordering.index(v)])
 
 def one_connected_comp(d, start):
@@ -52,23 +49,23 @@ def primecomps(dol):
     primes = []
     separators = []
     ordering = LEXM(dol)
-    F_dol = F(copy.deepcopy(dol), ordering)
-    C_list = [C(dol,v, ordering, F_dol) for v in dol.keys()]
+    F_dol = F(dol, ordering) # filled-in graph according to ordering
+    C_dict = {k: C(F_dol, k, ordering) for k in dol.keys()}
     vert_l = ordering
     while(vert_l): 
         i = vert_l[0]
         vert_l = vert_l[1:]
         V = set(dol.keys())
-        A = one_connected_comp(subgraph(dol, V - C_list[i]), i)
-        B = V - (C_list[i].union(A))
-        if isclique(subgraph(dol, C_list[i])) and B: 
-            primes.append(A.union(C_list[i]))
-            separators.append(C_list[i])
-            dol = subgraph(dol, B.union(C_list[i]))
+        A = one_connected_comp(subgraph(dol, V - C_dict[i]), i)
+        B = V - (C_dict[i].union(A))
+        if isclique(subgraph(dol, C_dict[i])) and B: 
+            primes.append(A.union(C_dict[i]))
+            separators.append(C_dict[i])
+            dol = subgraph(dol, B.union(C_dict[i]))
             for v in vert_l: # removing vertices in B cup C[v]
                 if v not in dol.keys(): 
                     vert_l.remove(v)
-    primes.append(A.union(C_list[i]))
+    primes.append(A.union(C_dict[i]))
     for p in primes: 
         if p in separators: 
             primes.remove(p) 

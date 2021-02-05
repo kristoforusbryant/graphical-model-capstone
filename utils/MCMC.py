@@ -33,7 +33,7 @@ class MCMC_Sampler:
         tic = time.time()
         
         if trackProposed: 
-            for rep in reps: 
+            for rep in range(self.reps): 
                 self.res[rep]['LIK_'] = []
                 self.res[rep]['PRIOR_'] = []
                 self.res[rep]['PROP_'] = []
@@ -86,7 +86,7 @@ class MCMC_Sampler:
 
             self.time[rep] = time.time() - tic # in seconds 
             self.iter[rep] = it
-
+            
         if summarize: 
             self.Summarize()
 
@@ -151,23 +151,39 @@ class MCMC_Sampler:
         # SETTING UP GRIDS FOR PLOTTING
         if self.reps > 10:
             warnings.warn("large number of repetition, each subplot may be too small to read")
-        fig, axs = plt.subplots(len(rownames), self.reps, figsize=(25,25), sharex='col', sharey='row')
-        fig.tight_layout()
-        for i in range(len(rownames)): 
-            for j in range(self.reps):
-                axs[i,j].xaxis.set_tick_params(labelsize=15)
-                axs[i,j].yaxis.set_tick_params(labelsize=15)
+            
+        if self.reps == 1: 
+            fig, axs = plt.subplots(len(rownames), self.reps, figsize=(25,25), sharex='col', sharey='row')
+            fig.tight_layout()
+            for i in range(len(rownames)):
+                axs[i,].xaxis.set_tick_params(labelsize=15)
+                axs[i,].yaxis.set_tick_params(labelsize=15)
+                axs[i,].set_ylabel(rownames[i], fontsize=20)
+                
+                vals = list(lod[0].values())
+                axs[i,].plot(vals[i])
+                
+            fig.savefig(outfile, dpi=250, bbox_inches='tight')
+            return fig
+            
+        else: 
+            fig, axs = plt.subplots(len(rownames), self.reps, figsize=(25,25), sharex='col', sharey='row')
+            fig.tight_layout()
+            for i in range(len(rownames)): 
+                for j in range(self.reps):
+                    axs[i,j].xaxis.set_tick_params(labelsize=15)
+                    axs[i,j].yaxis.set_tick_params(labelsize=15)
 
-        for i in range(self.reps): 
-            axs[0,i].set_title("rep" + str(i), fontsize=20)
-        for i in range(len(rownames)): 
-            axs[i,0].set_ylabel(rownames[i], fontsize=20)
+            for i in range(self.reps): 
+                axs[0,i].set_title("rep" + str(i), fontsize=20)
+            for i in range(len(rownames)): 
+                axs[i,0].set_ylabel(rownames[i], fontsize=20)
 
-        # FOR EVERY TYPE 
-        for rep in range(self.reps):
-            ctr = 0
-            for v in lod[rep].values():    
-                axs[ctr, rep].plot(v)
-                ctr = ctr + 1
-        fig.savefig(outfile, dpi=250, bbox_inches='tight')
-        return fig         
+            # FOR EVERY TYPE 
+            for rep in range(self.reps):
+                ctr = 0
+                for v in lod[rep].values():    
+                    axs[ctr, rep].plot(v)
+                    ctr = ctr + 1
+            fig.savefig(outfile, dpi=250, bbox_inches='tight')
+            return fig         

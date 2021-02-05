@@ -11,7 +11,7 @@ matplotlib.use('Agg') # to not display plots
 from utils.diagnostics import ACF, IAC_time
 
 class MCMC_Sampler: 
-    def __init__(self, prior, proposal, likelihood, data, reps=1):
+    def __init__(self, prior, proposal, likelihood, data, reps=1, outdir=""):
         self.prior = prior 
         self.prop = proposal 
         self.lik = likelihood
@@ -28,8 +28,9 @@ class MCMC_Sampler:
         self.iter = [0 for _ in range(reps)]
         self.summary = [{} for _ in range (reps)]
         self.reps = reps
+        self.outdir = outdir
         
-    def Run(self, it=7500, summarize=False, trackProposed=False): 
+    def Run(self, it=7500, summarize=False, trackProposed=False, saveEach=False): 
         tic = time.time()
         
         if trackProposed: 
@@ -87,6 +88,16 @@ class MCMC_Sampler:
             self.time[rep] = time.time() - tic # in seconds 
             self.iter[rep] = it
             
+            if saveEach: 
+                with open(self.outdir + 'rep' + str(rep) + '.pkl', 'wb') as handle:
+                    pickle.dump(self.res[rep], handle)
+                self.res[rep] = {'SAMPLES':[],
+                                'ALPHAS':[],
+                                'PARAMS':[], 
+                                'ACCEPT_INDEX':[], 
+                                'LIK':[], 
+                                'PRIOR':[], 
+                                'PROP':[]}
         if summarize: 
             self.Summarize()
 

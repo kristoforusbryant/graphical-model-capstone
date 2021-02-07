@@ -13,7 +13,7 @@ class Prior:
                 g.AddEdge(idx[0], idx[1])
                 basis.append(g.copy())
         self._basis = basis
-        
+    __name__ = 'uniform'
     def Sample(self):
         param = self._Param(self._n)
         for i in range(self._n): 

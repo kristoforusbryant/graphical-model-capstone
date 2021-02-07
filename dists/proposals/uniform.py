@@ -5,6 +5,8 @@ class Proposal:
     def __init__(self, n, Param):
         self._n = n          
         self._Param = Param
+    __name__ = 'uniform'
+       
     def Sample(self, param):
         i,j = random.choice(list(combinations(list(param.GetDOL().keys()), 2)))
         param_ = param.copy()

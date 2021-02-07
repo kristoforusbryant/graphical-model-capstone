@@ -37,6 +37,15 @@ with open(filename, 'rb') as handle:
 filename = os.path.join(exppath, 'Data.pkl')
 with open(filename, 'rb') as handle:
     DATA = pickle.load(handle)
+
+### Load Hyperparams 
+if "COUNTPRIOR" in list(CONFIG.keys()): 
+    CountPrior = importlib.import_module("dists.count_priors." + CONFIG['COUNTPRIOR']["name"]).CountPrior
+    prob_c = CountPrior(CONFIG['COUNTPRIOR']["params"])
+    
+if "SIZEPRIOR" in list(CONFIG.keys()):     
+    SizePrior = importlib.import_module("dists.size_priors." + CONFIG['SIZEPRIOR']["name"]).SizePrior 
+    prob_s = SizePrior(CONFIG['SIZEPRIOR']["params"])
     
 ### Run the MCMC 
 from utils.MCMC import MCMC_Sampler
@@ -47,8 +56,15 @@ def OneThread(i):
     reps = CONFIG["N_REPS"][i]
     
     # Initialise prior, prop, lik, data 
-    prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis)
-    prop = Proposal(n, PARAMS[i].__class__)
+    if CONFIG['PRIOR'] in ["uniform", "basis_uniform"]: 
+        prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis)
+    if CONFIG['PRIOR'] in ["basis_count_size"]: 
+        prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_c=prob_c , prob_s=prob_s)
+    if CONFIG['PRIOR'] in ["uniform", "basis_uniform"]: 
+        prop = Proposal(n, PARAMS[i].__class__)
+    if CONFIG['PRIOR'] in ["basis_size"]: 
+        prop = Proposal(n, PARAMS[i].__class__, prob_s=prob_s)
+    
     delta = 3 
     D = np.eye(n) # (delta, D) hyperpriors
     lik = Likelihood(DATA[i], 3, D, PARAMS[i].__class__)

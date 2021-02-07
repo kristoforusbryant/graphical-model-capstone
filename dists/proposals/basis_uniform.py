@@ -5,7 +5,8 @@ class Proposal:
     def __init__(self, n, Param):
         self._n = n          
         self._Param = Param
-        
+    __name__ = 'basis_uniform'
+    
     def Sample(self, param):
         i = random.choice(range(len(param._basis)))
         param_ = param.copy()

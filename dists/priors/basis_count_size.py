@@ -10,7 +10,7 @@ class Prior:
         self._basis = basis 
         self._prob_c = prob_c # for 0, ... number of basis
         self._prob_s = prob_s # for 0, ... m 
-        
+    __name__ = 'basis_count_size'
         
     def Sample(self):
         param = self._Param(self._n, basis=self._basis)

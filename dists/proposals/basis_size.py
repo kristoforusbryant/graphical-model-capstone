@@ -12,7 +12,8 @@ class Proposal:
         self._prob_s = prob_s
         unscaled_p_s = np.array([self._prob_s(p.EdgeCount()) for p in self._basis])
         self._p_s = unscaled_p_s / np.sum(unscaled_p_s) 
-        
+    __name__ = 'basis_size'
+    
     def Sample(self, param):
         i = np.random.choice(range(len(param._basis)), p = self._p_s)
         param_ = param.copy()

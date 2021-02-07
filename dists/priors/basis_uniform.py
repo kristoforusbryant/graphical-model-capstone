@@ -5,8 +5,9 @@ class Prior:
     def __init__(self, n, Param, basis):
         self._n = n
         self._Param = Param 
-        self._basis = basis 
-        
+        self._basis = basis
+    __name__ = 'basis_uniform'
+    
     def Sample(self):
         param = self._Param(self._n, basis=self._basis)
         for i in range(len(param._basis)): 

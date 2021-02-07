@@ -60,10 +60,10 @@ def OneThread(i):
         prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis)
     if CONFIG['PRIOR'] in ["basis_count_size"]: 
         prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_c=prob_c , prob_s=prob_s)
-    if CONFIG['PRIOR'] in ["uniform", "basis_uniform"]: 
+    if CONFIG['PROPOSAL'] in ["uniform", "basis_uniform"]: 
         prop = Proposal(n, PARAMS[i].__class__)
-    if CONFIG['PRIOR'] in ["basis_size"]: 
-        prop = Proposal(n, PARAMS[i].__class__, prob_s=prob_s)
+    if CONFIG['PROPOSAL'] in ["basis_size"]: 
+        prop = Proposal(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_s=prob_s)
     
     delta = 3 
     D = np.eye(n) # (delta, D) hyperpriors

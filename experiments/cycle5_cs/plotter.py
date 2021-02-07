@@ -42,24 +42,44 @@ Prior = importlib.import_module("dists.priors." + CONFIG['PRIOR']).Prior
 Proposal = importlib.import_module("dists.proposals." + CONFIG['PROPOSAL']).Proposal
 Likelihood = importlib.import_module("dists.likelihoods." + CONFIG['LIKELIHOOD']).Likelihood
 
+### Load Hyperparams 
+if "COUNTPRIOR" in list(CONFIG.keys()): 
+    CountPrior = importlib.import_module("dists.count_priors." + CONFIG['COUNTPRIOR']["name"]).CountPrior
+    prob_c = CountPrior(CONFIG['COUNTPRIOR']["params"])
+    
+if "SIZEPRIOR" in list(CONFIG.keys()):     
+    SizePrior = importlib.import_module("dists.size_priors." + CONFIG['SIZEPRIOR']["name"]).SizePrior 
+    prob_s = SizePrior(CONFIG['SIZEPRIOR']["params"])
+
 ### Plotting 
 from utils.MCMC import MCMC_Sampler
 from multiprocessing import Pool 
 
 def OnePlot(i):
+    print(str(i) +  ': STARTING')
+    import numpy as np 
+    
     n = DATA[i].shape[1]
     reps = CONFIG["N_REPS"][i]
-    
     # Initialise prior, prop, lik, data 
-    prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis)
-    prop = Proposal(n, PARAMS[i].__class__)
+    if CONFIG['PRIOR'] in ["uniform", "basis_uniform"]: 
+        prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis)
+    if CONFIG['PRIOR'] in ["basis_count_size"]: 
+        prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_c=prob_c , prob_s=prob_s)
+    if CONFIG['PROPOSAL'] in ["uniform", "basis_uniform"]: 
+        prop = Proposal(n, PARAMS[i].__class__)
+    if CONFIG['PROPOSAL'] in ["basis_size"]: 
+        prop = Proposal(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_s=prob_s)
+        
     delta = 3 
     D = np.eye(n) # (delta, D) hyperpriors
     lik = Likelihood(DATA[i], 3, D, PARAMS[i].__class__)
     
+    print(str(i) +  ': LOADING')
     filename = os.path.join(filepath, 'res/raw_'+str(i)+'.pkl')
     with open(filename, 'rb') as handle: 
         res = pickle.load(handle) 
+    print(str(i) +  ': LOADED')
     
     sampler = MCMC_Sampler(prior, prop, lik, DATA[i], reps=reps)
     sampler.res = res
@@ -69,22 +89,26 @@ def OnePlot(i):
     truncate = 8
     
     # Define the statistics to be traced
-    triu = np.triu_indices(n, 1) # upper-tri indices 
-    triu_edge_list = [(triu[0][i], triu[1][i]) for i in range(len(triu[0]))]
-    dof = {"(" + str(i) + "," + str(j) + ")" : lambda x,i=i,j=j: x.IsEdge(i, j) 
-           for i,j in triu_edge_list}
-    
+    dof = {"size": lambda x: x.EdgeCount(),
+           "basis_count": lambda x: np.sum(x._basis_active),
+           "avg_basis_size": lambda x: np.mean([b.EdgeCount() for b in x._basis_active])
+          }
     add_dicts = []
     for rep in range(reps):
         d = {
+            "lik": np.array(sampler.res[rep]['LIK'][burnin:]),
+            "lik_prop": np.array(sampler.res[rep]['LIK_'][burnin:]), 
+            "prior": np.array(sampler.res[rep]['PRIOR'][burnin:]),
+            "prior_prop": np.array(sampler.res[rep]['PRIOR_'][burnin:]) , 
             "posterior": np.array(sampler.res[rep]['LIK'][burnin:]) + np.array(sampler.res[rep]['PRIOR'][burnin:]),
-            "posterior_prop": np.array(sampler.res[rep]['LIK_'][burnin:]) + np.array(sampler.res[rep]['PRIOR_'][burnin:])
+            "posterior_prop": np.array(sampler.res[rep]['LIK_'][burnin:]) + np.array(sampler.res[rep]['PRIOR_'][burnin:]) 
         }
         add_dicts.append(d)
-    
+        
+    print(str(i) +  ': PLOTTING TRACES')
     # Plot Traces
-    fig = sampler.GetTrace(dof, 'vis' + "/trace" + str(i) + '.png', 
-                           additional_dicts = add_dicts, list_first=True, burnin=burnin) # CONFIG['BURNIN'][i]
+    fig = sampler.GetTrace(dof, os.path.join(filepath, 'vis' + "/trace" + str(i) + '.png'), 
+                           additional_dicts = add_dicts, list_first=True, burnin=burnin) 
     
     # Plot True and Preidcted Graphs
     AdjM_list = [create_edge_matrix(rep['SAMPLES']) for rep in sampler.res]
@@ -105,31 +129,35 @@ def OnePlot(i):
     # Plot decreasing likelihoods (change ncols in the axes to 3 if we want to do this)
     data = DATA[i]
     U = data.transpose() @ data 
-    res = {'IG_prior': [],'IG_postr': []}
 
-    all_graphs = Graph.get_all_graphs(n)
-    for g in all_graphs:
-        D_star = constrained_cov(g.GetDOL(), D + U, np.eye(n))
-        GW_prior = G_Wishart(g, delta, D)
-        GW_postr = G_Wishart(g, delta + data.shape[0], D_star)
-        res['IG_prior'].append(GW_prior.IG())
-        res['IG_postr'].append(GW_postr.IG())
-    
+    # Get True Graph
+    true_g = PARAMS[i]
+    D_star = constrained_cov(true_g.GetDOL(), D + U, np.eye(n))
+    GW_prior = G_Wishart(true_g, delta, D)
+    GW_postr = G_Wishart(true_g, delta + data.shape[0], D_star)
+    true_loglik = GW_postr.IG() - GW_prior.IG()
+
     import pandas as pd 
-    df = pd.DataFrame(res)
-    df['loglik'] = df['IG_postr'] - df['IG_prior'] 
-    df.sort_values(by='loglik', ascending=False, inplace=True)
-    df.reset_index(inplace=True)
-    df.loglik[:50].plot.line(ax = axes[2])
+    import numpy as np 
+    df = pd.DataFrame(res[0])
+    df['SAMPLES_STR'] = df['SAMPLES'].apply(lambda x: x.__str__())
+    df.sort_values('LIK', inplace=True, ascending=False)
+    logliks = list(df.groupby('SAMPLES_STR').head(1)['LIK'])
+    
+    axes[2].plot(logliks[:50])
+    axes[2].hlines(true_loglik, 0, 50)
+
     axes[2].set_title('largest likelihoods', fontsize=20)
     
     fig.tight_layout()
     
-    filename = 'vis/' + "Header"+str(i)+".png"
+    filename = os.path.join(filepath, 'vis/' + "Header"+str(i)+".png")
     fig.savefig(filename, dpi=250, bbox_inches='tight')
     
+    
+    print(str(i) +  ': COMBINING')
     #Combining with trace plot
-    list_im = ['vis/' + im for im in ["Header"+str(i)+".png", 'trace'+str(i)+'.png']]
+    list_im = [os.path.join(filepath, 'vis/' + im) for im in ["Header"+str(i)+".png", 'trace'+str(i)+'.png']]
     imgs    = [ PIL.Image.open(i) for i in list_im ]
     new_im = PIL.Image.new(imgs[0].mode, (imgs[1].size[0], imgs[0].size[1]))
     new_im.paste(imgs[0])
@@ -137,7 +165,11 @@ def OnePlot(i):
     imgs_comb = np.vstack( [new_im, imgs[1]] )
     imgs_comb = PIL.Image.fromarray(imgs_comb)
     
-    imgs_comb.save('vis/'+'vis'+str(i)+'.png' )
+    imgs_comb.save(os.path.join(filepath,'vis/'+'vis'+str(i)+'.png'))
     
 p = Pool()
 p.map(OnePlot, range(len(DATA)))
+
+#for i in range(5): 
+#    OnePlot(i)
+

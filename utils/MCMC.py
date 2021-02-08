@@ -30,7 +30,7 @@ class MCMC_Sampler:
         self.reps = reps
         self.outdir = outdir
         
-    def Run(self, it=7500, summarize=False, trackProposed=False, saveEach=False): 
+    def Run(self, it=7500, summarize=False, trackProposed=False, saveEach=False, fixed_init=None): 
         tic = time.time()
         
         if trackProposed: 
@@ -42,7 +42,10 @@ class MCMC_Sampler:
         # Sampler
         for rep in range(self.reps): 
             # Initialisation 
-            params = self.prior.Sample()
+            if fixed_init is not None: 
+                params = fixed_init
+            else: 
+                params = self.prior.Sample()
             lik_p = self.lik.PDF(params) 
             prior_p = self.prior.PDF(params)
             print(params)

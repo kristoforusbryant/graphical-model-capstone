@@ -37,7 +37,7 @@ with open(filename, 'rb') as handle:
 filename = os.path.join(exppath, 'Data.pkl')
 with open(filename, 'rb') as handle:
     DATA = pickle.load(handle)
-
+    
 ### Load Hyperparams 
 if "COUNTPRIOR" in list(CONFIG.keys()): 
     CountPrior = importlib.import_module("dists.count_priors." + CONFIG['COUNTPRIOR']["name"]).CountPrior
@@ -46,6 +46,7 @@ if "COUNTPRIOR" in list(CONFIG.keys()):
 if "SIZEPRIOR" in list(CONFIG.keys()):     
     SizePrior = importlib.import_module("dists.size_priors." + CONFIG['SIZEPRIOR']["name"]).SizePrior 
     prob_s = SizePrior(CONFIG['SIZEPRIOR']["params"])
+    
     
 ### Run the MCMC 
 from utils.MCMC import MCMC_Sampler
@@ -70,7 +71,10 @@ def OneThread(i):
     lik = Likelihood(DATA[i], 3, D, PARAMS[i].__class__)
     
     sampler = MCMC_Sampler(prior, prop, lik, DATA[i], reps=reps)
-    sampler.Run(CONFIG['ITER'][i], summarize=True, trackProposed=True)
+    if CONFIG["FIXED_INIT"]:
+        sampler.Run(CONFIG['ITER'][i], summarize=True, trackProposed=True, fixed_init=PARAMS[i])
+    else: 
+        sampler.Run(CONFIG['ITER'][i], summarize=True, trackProposed=True)
     
     sampler.SaveRaw(os.path.join(exppath, 'res/raw_'+str(i)+'.pkl'))
     sampler.SaveSummary(os.path.join(exppath, 'summary/summary_'+str(i)+'.pkl'))

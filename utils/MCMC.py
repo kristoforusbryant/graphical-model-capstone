@@ -16,14 +16,16 @@ class MCMC_Sampler:
         self.prop = proposal 
         self.lik = likelihood
         self.data = data 
-        self.res = [{'SAMPLES':[],
+        self.res = [{'SAMPLES':[], # ID
                     'ALPHAS':[],
-                    'PARAMS':[], 
+                    'PARAMS':[], # ID
                     'ACCEPT_INDEX':[], 
                     'LIK':[], 
                     'PRIOR':[], 
                     'PROP':[]} for _ in range(reps)]
-            
+        
+        self.lookup = {} # dict of dicts 
+        
         self.time = [0.0 for _ in range(reps)]
         self.iter = [0 for _ in range(reps)]
         self.summary = [{} for _ in range (reps)]
@@ -46,17 +48,31 @@ class MCMC_Sampler:
                 params = fixed_init
             else: 
                 params = self.prior.Sample()
-            lik_p = self.lik.PDF(params) 
-            prior_p = self.prior.PDF(params)
+                
+            id_p = params.GetID()
+            if id_p in self.lookup.keys(): 
+                lik_p = self.lookup[id_p]['LIK']
+                prior_p = self.lookup[id_p]['PRIOR']
+            else:
+                lik_p = self.lik.PDF(params)
+                prior_p = self.prior.PDF(params)
+                self.lookup[id_p] = {'LIK': lik_p, 'PRIOR': prior_p, 'OBJ': params}
+            
             print(params)
             print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
             for i in tqdm(range(it)):
                 params_ = self.prop.Sample(params)
                 
-                self.res[rep]['PARAMS'].append(params_.copy())
-
-                lik_p_ = self.lik.PDF(params_)
-                prior_p_ = self.prior.PDF(params_)
+                id_p_ = params_.GetID()
+                self.res[rep]['PARAMS'].append(id_p_)
+                if id_p_ in self.lookup.keys(): 
+                    lik_p_ = self.lookup[id_p_]['LIK']
+                    prior_p_ = self.lookup[id_p_]['PRIOR']
+                else:
+                    lik_p_ = self.lik.PDF(params_)
+                    prior_p_ = self.prior.PDF(params_)
+                    self.lookup[id_p_] = {'LIK': lik_p_, 'PRIOR': prior_p_, 'OBJ': params_}
+                
                 prop_p_ = self.prop.PDF(params_, params ) # params_ -> params
                 prop_p = self.prop.PDF(params, params_) # params -> params_
                 
@@ -74,16 +90,17 @@ class MCMC_Sampler:
                 self.res[rep]['ALPHAS'].append(alpha)
                 if np.log(np.random.uniform()) < alpha:
                     self.res[rep]['ACCEPT_INDEX'].append(1)
-                    self.res[rep]['SAMPLES'].append(params_.copy())
+                    self.res[rep]['SAMPLES'].append(id_p_)
                     self.res[rep]['LIK'].append(lik_p_) 
                     self.res[rep]['PRIOR'].append(prior_p_)
                     self.res[rep]['PROP'].append((prop_p, prop_p_))
+                    id_p = id_p_
                     params = params_ 
                     lik_p = lik_p_ 
                     prior_p = prior_p_
                 else:
                     self.res[rep]['ACCEPT_INDEX'].append(0)
-                    self.res[rep]['SAMPLES'].append(params.copy())
+                    self.res[rep]['SAMPLES'].append(id_p)
                     self.res[rep]['LIK'].append(lik_p) 
                     self.res[rep]['PRIOR'].append(prior_p)
                     self.res[rep]['PROP'].append((prop_p_, prop_p))
@@ -108,7 +125,7 @@ class MCMC_Sampler:
     
     def SaveRaw(self, outfile): 
         with open(outfile, 'wb') as handle:
-            pickle.dump(self.res, handle)
+            pickle.dump((self.res, self.lookup), handle)
             
     def SaveSummary(self, outfile):
         with open(outfile, 'wb') as handle:
@@ -116,15 +133,15 @@ class MCMC_Sampler:
     
     def Summarize(self):
         for rep in range(self.reps): 
-            size = [p.EdgeCount() for p in self.res[rep]['SAMPLES'] ]
+            size = [self.lookup[p]['OBJ'].EdgeCount() for p in self.res[rep]['SAMPLES'] ]
             posterior = np.array(self.res[rep]['LIK']) + np.array(self.res[rep]['PRIOR'])
 
             uniq = {} #k: graph strings, v: (count, size)
             for p in self.res[rep]['SAMPLES']: 
-                if p.__str__() not in uniq.keys():
-                    uniq[p.__str__()] = [1, p.EdgeCount()]
+                if p not in uniq.keys():
+                    uniq[p] = [1, self.lookup[p]['OBJ'].EdgeCount()]
                 else: 
-                    uniq[p.__str__()][0] += 1
+                    uniq[p][0] += 1
 
             uniq = np.array(list(uniq.values()))
             uniq = uniq[np.argsort(uniq[:, 1])] 
@@ -147,17 +164,17 @@ class MCMC_Sampler:
             for rep in range(self.reps):
                 d = additional_dicts[rep]
                 for k,f in dof.items(): 
-                    d[k] = [f(p) for p in self.res[rep]['SAMPLES'][burnin:]]
+                    d[k] = [f(self.lookup[p]['OBJ']) for p in self.res[rep]['SAMPLES'][burnin:]]
                 lod.append(d)
         elif additional_dicts is not None and not list_first: 
             for rep in range(self.reps):
-                d = {dof[k]: [f(p) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
+                d = {dof[k]: [f(self.lookup[p]['OBJ']) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
                 for k,v in additional_dict: 
                     d[k] = v
                 lod.append(d)
         else: 
             for rep in range(self.reps):
-                d = {dof[k]: [f(p) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
+                d = {dof[k]: [f(self.lookup[p]['OBJ']) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
                 lod.append(d)
 
         rownames = list(lod[0].keys())

@@ -91,7 +91,7 @@ def OnePlot(i):
     print(str(i) +  ': PLOTTING TRACES')
     # Plot Traces
     fig = sampler.GetTrace(dof, 'vis' + "/trace" + str(i) + '.png', 
-                           additional_dicts = add_dicts, list_first=True, burnin=burnin) # CONFIG['BURNIN'][i]
+                           additional_dicts = add_dicts, list_first=True, burnin=burnin) 
     
     # Plot True and Preidcted Graphs
     AdjM_list = [create_edge_matrix(rep['SAMPLES']) for rep in sampler.res]

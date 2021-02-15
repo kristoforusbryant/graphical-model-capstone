@@ -8,7 +8,7 @@ sys.path.append(projectpath)
 import numpy as np
 import pickle
 import json
-from utils.diagnostics import create_edge_matrix
+from utils.diagnostics import create_edge_matrix_from_binary_str
 import PIL
 import matplotlib.pyplot as plt
 from utils.Graph import Graph
@@ -78,11 +78,12 @@ def OnePlot(i):
     print(str(i) +  ': LOADING')
     filename = os.path.join(filepath, 'res/raw_'+str(i)+'.pkl')
     with open(filename, 'rb') as handle: 
-        res = pickle.load(handle) 
+        res, lookup = pickle.load(handle) 
     print(str(i) +  ': LOADED')
     
     sampler = MCMC_Sampler(prior, prop, lik, DATA[i], reps=reps)
     sampler.res = res
+    sampler.lookup = lookup 
     
     # Define the statistics to be traced
     burnin = CONFIG['BURNIN'][i]
@@ -111,7 +112,7 @@ def OnePlot(i):
                            additional_dicts = add_dicts, list_first=True, burnin=burnin) 
     
     # Plot True and Preidcted Graphs
-    AdjM_list = [create_edge_matrix(rep['SAMPLES']) for rep in sampler.res]
+    AdjM_list = [create_edge_matrix_from_binary_str(rep['SAMPLES'], n) for rep in sampler.res]
     AdjM = sum(AdjM_list) / len(AdjM_list)
     AdjM[AdjM >= .5] = 1
     AdjM[AdjM < .5] = 0
@@ -140,9 +141,8 @@ def OnePlot(i):
     import pandas as pd 
     import numpy as np 
     df = pd.DataFrame(res[0])
-    df['SAMPLES_STR'] = df['SAMPLES'].apply(lambda x: x.__str__())
     df.sort_values('LIK', inplace=True, ascending=False)
-    logliks = list(df.groupby('SAMPLES_STR').head(1)['LIK'])
+    logliks = list(df.groupby('SAMPLES').head(1)['LIK'])
     
     axes[2].plot(logliks[:50])
     axes[2].hlines(true_loglik, 0, 50)

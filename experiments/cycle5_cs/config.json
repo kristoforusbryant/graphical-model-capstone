@@ -12,6 +12,7 @@
 "SIZEPRIOR": {"name": "trunc_nbinom",
 	      "params": {"r": 9, "p": 0.75}
 	      },
+"FIXED_INIT": 0,
 "LIKELIHOOD": "G_Wishart_Ratio" ,
 "ITER": [750,750,750,750,750], 
 "BURNIN": [250,250,250,250,250]

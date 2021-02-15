@@ -22,12 +22,16 @@ class Graph: # undirected, unweigheted graph
     def GetDOL(self): 
         return self._dol
     def GetAdjM(self): 
-        AdjM = np.zeros((len(self._dol), len(self._dol)))
+        AdjM = np.zeros((len(self._dol), len(self._dol)), dtype=int)
         for k,l in self._dol.items():
             for i in l: 
                 AdjM[i,k] = 1
                 AdjM[k,i] = 1
         return AdjM
+    
+    def GetID(self): 
+        return ''.join(self.GetAdjM()[np.triu_indices(len(self), 1)].astype(str).tolist())
+    
     def GetEdgeL(self):
         EdgeL = []
         for i in range(len(self._dol)):
@@ -47,6 +51,7 @@ class Graph: # undirected, unweigheted graph
                 if i in self._dol[j]: 
                     count += 1
         return count
+    
     def __repr__(self): 
         return self._dol.__str__()
     def __str__(self): 

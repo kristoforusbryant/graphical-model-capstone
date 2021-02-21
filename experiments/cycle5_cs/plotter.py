@@ -89,10 +89,14 @@ def OnePlot(i):
     burnin = CONFIG['BURNIN'][i]
     truncate = 8
     
+    sum_bin_str = lambda x: np.sum(np.array(list(x), dtype=int))
+    basis = PARAMS[i]._basis
+    
     # Define the statistics to be traced
-    dof = {"size": lambda x: x.EdgeCount(),
-           "basis_count": lambda x: np.sum(x._basis_active),
-           "avg_basis_size": lambda x: np.mean([x._basis[i].EdgeCount() for i in range(len(x._basis)) if x._basis_active[i]])
+    dof = {"size": lambda x: sum_bin_str(x),
+           "basis_count": lambda x: sum_bin_str(sampler.lookup[x]['BASIS_ID']),
+           "avg_basis_size": lambda x: np.mean([basis[i].EdgeCount() for i in range(len(basis)) 
+                                                if x[i] == '1'])
           }
     add_dicts = []
     for rep in range(reps):

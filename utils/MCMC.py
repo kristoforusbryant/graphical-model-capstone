@@ -56,7 +56,10 @@ class MCMC_Sampler:
             else:
                 lik_p = self.lik.PDF(params)
                 prior_p = self.prior.PDF(params)
-                self.lookup[id_p] = {'LIK': lik_p, 'PRIOR': prior_p, 'OBJ': params}
+                basis_id_p = ''.join(params._basis_active.astype(int).astype(str).tolist())
+                self.lookup[id_p] = {'LIK': lik_p, 'PRIOR': prior_p,
+                                     'BASIS_ID': basis_id_p}
+                                     #'OBJ': params}
             
             print(params)
             print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
@@ -71,7 +74,10 @@ class MCMC_Sampler:
                 else:
                     lik_p_ = self.lik.PDF(params_)
                     prior_p_ = self.prior.PDF(params_)
-                    self.lookup[id_p_] = {'LIK': lik_p_, 'PRIOR': prior_p_, 'OBJ': params_}
+                    basis_id_p_ = ''.join(params_._basis_active.astype(int).astype(str).tolist())
+                    self.lookup[id_p_] = {'LIK': lik_p_, 'PRIOR': prior_p_, 
+                                          'BASIS_ID': basis_id_p_}
+                                          #'OBJ': params_}
                 
                 prop_p_ = self.prop.PDF(params_, params ) # params_ -> params
                 prop_p = self.prop.PDF(params, params_) # params -> params_
@@ -133,15 +139,15 @@ class MCMC_Sampler:
     
     def Summarize(self):
         for rep in range(self.reps): 
-            size = [self.lookup[p]['OBJ'].EdgeCount() for p in self.res[rep]['SAMPLES'] ]
+            size = [np.sum(np.array(list(p_id), dtype=int)) for p_id in self.res[rep]['SAMPLES'] ]
             posterior = np.array(self.res[rep]['LIK']) + np.array(self.res[rep]['PRIOR'])
 
             uniq = {} #k: graph strings, v: (count, size)
-            for p in self.res[rep]['SAMPLES']: 
-                if p not in uniq.keys():
-                    uniq[p] = [1, self.lookup[p]['OBJ'].EdgeCount()]
+            for p_id in self.res[rep]['SAMPLES']: 
+                if p_id not in uniq.keys():
+                    uniq[p_id] = [1, np.sum(np.array(list(p_id), dtype=int))]
                 else: 
-                    uniq[p][0] += 1
+                    uniq[p_id][0] += 1
 
             uniq = np.array(list(uniq.values()))
             uniq = uniq[np.argsort(uniq[:, 1])] 
@@ -164,17 +170,17 @@ class MCMC_Sampler:
             for rep in range(self.reps):
                 d = additional_dicts[rep]
                 for k,f in dof.items(): 
-                    d[k] = [f(self.lookup[p]['OBJ']) for p in self.res[rep]['SAMPLES'][burnin:]]
+                    d[k] = [f(p_id) for p_id in self.res[rep]['SAMPLES'][burnin:]]
                 lod.append(d)
         elif additional_dicts is not None and not list_first: 
             for rep in range(self.reps):
-                d = {dof[k]: [f(self.lookup[p]['OBJ']) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
+                d = {dof[k]: [f(p_id) for p_id in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
                 for k,v in additional_dict: 
                     d[k] = v
                 lod.append(d)
         else: 
             for rep in range(self.reps):
-                d = {dof[k]: [f(self.lookup[p]['OBJ']) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
+                d = {dof[k]: [f(p_id) for p in self.res[rep]['SAMPLES'][burnin:]] for k,f in dof.items()}
                 lod.append(d)
 
         rownames = list(lod[0].keys())

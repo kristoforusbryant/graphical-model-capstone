@@ -1,11 +1,11 @@
-from math import gamma
+from math import lgamma
 import numpy as np
 from .prime_components import primecomps
 
 def LogGamma_n(x, n):
     acc = (n * (n-1)) / 4 * np.log(np.pi)
     for i in range(n):
-        acc += np.log(gamma(x - i/2))
+        acc += lgamma(x - i/2)
     return acc
 
 def IG_clique(delta, D):

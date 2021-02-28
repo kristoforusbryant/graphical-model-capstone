@@ -6,7 +6,6 @@ from utils.minimal_ordering import LEXM
 from utils.prime_components import primecomps
 
 
-
 class Graph: # undirected, unweigheted graph 
     def  __init__(self, n, dol=None):
         if dol is not None: 
@@ -32,6 +31,9 @@ class Graph: # undirected, unweigheted graph
     def GetID(self): 
         return ''.join(self.GetAdjM()[np.triu_indices(len(self), 1)].astype(str).tolist())
     
+    def GetBinaryL(self): 
+        return self.GetAdjM()[np.triu_indices(len(self), 1)]
+    
     def GetEdgeL(self):
         EdgeL = []
         for i in range(len(self._dol)):
@@ -39,6 +41,10 @@ class Graph: # undirected, unweigheted graph
                 if i in self._dol[j]: 
                     EdgeL.append((i,j))
         return EdgeL 
+    
+    def GetNeighbours(self, v): 
+        return self._dol[v]
+    
     def IsEdge(self, i, j): 
         if i < len(self) and j < len(self): 
             return (j in self._dol[i])

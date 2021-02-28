@@ -63,7 +63,7 @@ def OneThread(i):
         prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_c=prob_c , prob_s=prob_s)
     if CONFIG['PROPOSAL'] in ["uniform", "basis_uniform"]: 
         prop = Proposal(n, PARAMS[i].__class__)
-    if CONFIG['PROPOSAL'] in ["basis_size", "basis_size_bd"]: 
+    if CONFIG['PROPOSAL'] in ["basis_size", "basis_size_bd", "basis_size_t", "basis_size_bd_t"]: 
         prop = Proposal(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_s=prob_s)
     
     delta = 3 

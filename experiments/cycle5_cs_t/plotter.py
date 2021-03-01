@@ -61,19 +61,24 @@ def OnePlot(i):
     
     n = DATA[i].shape[1]
     reps = CONFIG["N_REPS"][i]
+    
+    if "TREEPRIOR" in list(CONFIG.keys()): 
+        TreePrior = importlib.import_module("dists.spanning_tree_priors." + CONFIG['TREEPRIOR']).STPrior  
+        tree_prior = TreePrior(n)
+    
     # Initialise prior, prop, lik, data 
     if CONFIG['PRIOR'] in ["uniform", "basis_uniform"]: 
         prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis)
     if CONFIG['PRIOR'] in ["basis_count_size"]: 
         prior = Prior(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_c=prob_c , prob_s=prob_s)
     if CONFIG['PRIOR'] in ["basis_count_size_t"]: 
-        prior = Prior(n, PARAMS[i].__class__, prob_c=prob_c, prob_s=prob_s)
+        prior = Prior(n, PARAMS[i].__class__, prob_c=prob_c, prob_s=prob_s, tree_prior=tree_prior)
     if CONFIG['PROPOSAL'] in ["uniform", "basis_uniform"]: 
         prop = Proposal(n, PARAMS[i].__class__)
     if CONFIG['PROPOSAL'] in ["basis_size", "basis_size_bd"]: 
         prop = Proposal(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_s=prob_s)
     if CONFIG['PROPOSAL'] in ["basis_size_t", "basis_size_bd_t"]: 
-        prop = Proposal(n, PARAMS[i].__class__, prob_s)
+        prop = Proposal(n, PARAMS[i].__class__, prob_s, tree_prior=tree_prior)
         
     delta = 3 
     D = np.eye(n) # (delta, D) hyperpriors

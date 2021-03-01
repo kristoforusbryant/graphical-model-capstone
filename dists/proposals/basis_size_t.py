@@ -6,7 +6,7 @@ from utils.inverse_binary import inverse_binary
 
 # Assume basis remain constant
 class Proposal:
-    def __init__(self, n, Param, prob_s, tree_prior=None):
+    def __init__(self, n, Param, prob_s, tree_prior=None, skip=10):
         # rv_size: distribution of the basis size
         self._n = n          
         self._Param = Param
@@ -16,23 +16,28 @@ class Proposal:
         else: 
             from dists.spanning_tree_priors.uniform import STPrior
             self._tree_prior = STPrior(n) 
+        self.counter = 0 
+        self._skip = skip
             
     __name__ = 'basis_size_with_tree_prior'
     
     def Sample(self, param):
-        # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
-        T_ = self._tree_prior.Sample()
-        
-        # Change of basis
         param_ = param.copy()
-        param_._basis = cycle_basis(T_)
-        param_._tree = T_
         
-        M = COBM(param._tree) 
-        M_ = COBM(param_._tree) # M and M_ are COBM in the entire space
-        subM = (inverse_binary(M_) @ M % 2)[:len(param_._basis), :len(param_._basis)]
-        _basis_active = (subM @ param._basis_active % 2) 
-        param_._basis_active = _basis_active.astype(bool)
+        # Change Basis
+        if self.counter % self._skip == 0: 
+            # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
+            T_ = self._tree_prior.Sample()
+    
+            param_._basis = cycle_basis(T_)
+            param_._tree = T_
+
+            M = COBM(param._tree) 
+            M_ = COBM(param_._tree) # M and M_ are COBM in the entire space
+            subM = (inverse_binary(M_) @ M % 2)[:len(param_._basis), :len(param_._basis)]
+            _basis_active = (subM @ param._basis_active % 2) 
+            param_._basis_active = _basis_active.astype(bool)
+        self.counter += 1 
         
         # Rescaling p_s 
         unscaled_p_s = np.array([self._prob_s(p.EdgeCount()) for p in param_._basis])

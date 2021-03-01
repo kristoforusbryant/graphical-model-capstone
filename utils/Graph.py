@@ -92,8 +92,8 @@ class Graph: # undirected, unweigheted graph
     def SetFromEdgeL(self, EdgeL): 
         self.SetEmpty()
         self.AddEdges(EdgeL)
-    def SetEmpty(self,n): 
-        self._dol = {i: [] for i in range(n)}
+    def SetEmpty(self): 
+        self._dol = {i: [] for i in range(len(self))}
     def SetComplete(self, n=None):
         if n is None: 
             n = len(self._dol)

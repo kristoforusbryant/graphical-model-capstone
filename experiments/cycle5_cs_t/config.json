@@ -1,0 +1,19 @@
+{"DESCRIPTION": "CYCLE BASIS, WITH PRIORS RESTRICTED TO SMALL CYCLES AND SMALL NUMBER OF BASIS" ,
+"SEED": 47,
+"N_REPS": [2,2,2,2,2],
+"N_NODES": [5,5,5,5,5],
+"N_DATA": [250,250,250,250,250],
+"PARAM": "graph_n_basis",
+"PRIOR": "basis_count_size_t",
+"PROPOSAL": "basis_size_t",
+"COUNTPRIOR": {"name": "trunc_nbinom", 
+		"params": {"r": 6, "p": 0.75}
+		},
+"SIZEPRIOR": {"name": "trunc_nbinom",
+	      "params": {"r": 9, "p": 0.75}
+	      },
+"FIXED_INIT": 0,
+"LIKELIHOOD": "G_Wishart_Ratio" ,
+"ITER": [750,750,750,750,750], 
+"BURNIN": [0,0,0,0,0]
+}

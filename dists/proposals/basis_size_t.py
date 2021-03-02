@@ -26,6 +26,13 @@ class Proposal:
         
         # Change Basis
         if self.counter % self._skip == 0: 
+            # Make one switch first 
+            unscaled_p_s = np.array([self._prob_s(p.EdgeCount()) for p in param_._basis])
+            self._p_s = unscaled_p_s / np.sum(unscaled_p_s)
+            
+            i = np.random.choice(range(len(param_._basis)), p = self._p_s)
+            param_.BinAddOneBasis(i)
+            
             # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
             T_ = self._tree_prior.Sample()
     
@@ -35,8 +42,9 @@ class Proposal:
             M = COBM(param._tree) 
             M_ = COBM(param_._tree) # M and M_ are COBM in the entire space
             subM = (inverse_binary(M_) @ M % 2)[:len(param_._basis), :len(param_._basis)]
-            _basis_active = (subM @ param._basis_active % 2) 
+            _basis_active = (subM @ param_._basis_active % 2) 
             param_._basis_active = _basis_active.astype(bool)
+            
         self.counter += 1 
         
         # Rescaling p_s 
@@ -46,6 +54,7 @@ class Proposal:
         # Same procedure as basis_size.py
         i = np.random.choice(range(len(param_._basis)), p = self._p_s)
         param_.BinAddOneBasis(i)
+        
         return param_ 
     
     def PDF(self, p0, p1):

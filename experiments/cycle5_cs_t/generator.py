@@ -54,7 +54,13 @@ circle = Param(n, circle_graph(n), basis=basis)
 
 # Random Graphs on 5 nodes 
 np.random.seed(CONFIG['SEED'])
-random_l = [prior.Sample() for _ in range(N_graphs - 2)]
+import networkx as nx
+cycle_space_complement = [nx.to_dict_of_lists(nx.erdos_renyi_graph(n, .2)),
+                          nx.to_dict_of_lists(nx.barabasi_albert_graph(n, 2)),
+                          nx.to_dict_of_lists(nx.barabasi_albert_graph(n, 2)),]
+
+random_l = [prior.Sample() for _ in range(3)] + [Param(n, dol) for dol in cycle_space_complement]
+            
 
 # Joined 
 GRAPHS = [empty, circle] + random_l 

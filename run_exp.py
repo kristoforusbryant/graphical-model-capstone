@@ -20,7 +20,6 @@ with open(filename) as handle:
     
 ### Generate Params and Data if necessary inputs does not exits 
 if not all(os.path.exists(exppath+"/"+obj) for obj in ["Params.pkl", "Data.pkl"]): 
-    print("Generating using experiments/five_on_five/generator.py")
     os.system('python ' + exppath + '/generator.py')
     
 ### Import Prior, Proposal, and Likelihood Classes 
@@ -71,8 +70,10 @@ def OneThread(i):
         prop = Proposal(n, PARAMS[i].__class__)
     if CONFIG['PROPOSAL'] in ["basis_size", "basis_size_bd"]: 
         prop = Proposal(n, PARAMS[i].__class__, basis=PARAMS[i]._basis, prob_s=prob_s)
-    if CONFIG['PROPOSAL'] in ["basis_size_t", "basis_size_bd_t"]: 
+    if CONFIG['PROPOSAL'] in ["basis_size_t"]: 
         prop = Proposal(n, PARAMS[i].__class__, prob_s, tree_prior=tree_prior, skip=CONFIG['SKIP'])
+    if CONFIG['PROPOSAL'] in ["basis_size_bd_t"]: 
+        prop = Proposal(n, PARAMS[i].__class__, tree_prior=tree_prior, skip=CONFIG['SKIP'])
     
     delta = 3 
     D = np.eye(n) # (delta, D) hyperpriors

@@ -4,46 +4,50 @@ from scipy.stats import nbinom
 from itertools import combinations
 from utils.generate_basis import cycle_basis
 from copy import deepcopy
+from utils.generate_basis import cycle_basis, COBM
+from utils.inverse_binary import inverse_binary
 
 # Assume basis remain constant
 class Proposal:
-    def __init__(self, n, Param, basis, prob_s, tree_prior=None, bd_prob=.5):
+    def __init__(self, n, Param, tree_prior=None, bd_prob=.5, skip=10):
         # prob_s: distribution of the basis size
         self._n = n          
         self._Param = Param
-        self._basis = basis
-        self._prob_s = prob_s
-        unscaled_p_s = np.array([self._prob_s(p.EdgeCount()) for p in self._basis])
-        self._p_s = unscaled_p_s / np.sum(unscaled_p_s) 
         self._bd_prob = bd_prob
         if tree_prior:
             self._tree_prior = tree_prior
         else: 
             from dists.spanning_tree_priors.uniform import STPrior
             self._tree_prior = STPrior(n) 
+        self.counter = 0 
+        self._skip = skip
             
     __name__ = 'basis_size_bd_with_tree_prior'
     
     def Sample(self, param, with_switching=False):
-        # sampling new basis 
-        T = self._tree_prior.Sample()
-        self._basis = cycle_basis(T)
-        param._basis = deepcopy(self._basis)
+        param_ = param.copy()
         
-        # switching basis
-        A = np.zeros((len(self._basis), int(self._n * (self._n - 1)/2)) # change of basis matrix from param -> new 
-        for i in range(len(self._basis)): 
-            A[i,:] = (param._basis[i].GetBinaryL() + self._basis[i].GetBinaryL()) % 2
+        # Change Basis
+        if self.counter % self._skip == 0: 
+            # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
+            T_ = self._tree_prior.Sample()
+    
+            param_._basis = cycle_basis(T_)
+            param_._tree = T_
+
+            M = COBM(param._tree) 
+            M_ = COBM(param_._tree) # M and M_ are COBM in the entire space
+            subM = (inverse_binary(M_) @ M % 2)[:len(param_._basis), :len(param_._basis)]
+            _basis_active = (subM @ param._basis_active % 2) 
+            param_._basis_active = _basis_active.astype(bool)
+        self.counter += 1 
         
-        param._basis_active = ((A @ param._basis_active) % 2).astype(bool).tolist()
-        
-        indexes = np.arange(len(self._basis))
+        indexes = np.arange(len(param_._basis))
         # if empty, then guaranteed birth 
         if np.sum(param._basis_active) == 0: 
             # birth
             inactive_idx = np.invert(param._basis_active)
-            subset_p_s = self._p_s[inactive_idx] / np.sum(self._p_s[inactive_idx])
-            i = np.random.choice(indexes[inactive_idx], p=subset_p_s)
+            i = np.random.choice(indexes[inactive_idx])
             param_ = param.copy()
             param_.BinAddOneBasis(i)
             
@@ -51,8 +55,7 @@ class Proposal:
         elif np.sum(param._basis_active) == len(param._basis_active): 
             # death 
             active_idx = param._basis_active
-            subset_p_s = self._p_s[active_idx] / np.sum(self._p_s[active_idx])
-            i = np.random.choice(indexes[active_idx], p=subset_p_s)
+            i = np.random.choice(indexes[active_idx])
             param_ = param.copy()
             param_.BinAddOneBasis(i)
         
@@ -60,16 +63,14 @@ class Proposal:
         elif np.random.random() < self._bd_prob: 
             # birth 
             inactive_idx = np.invert(param._basis_active)
-            subset_p_s = self._p_s[inactive_idx] / np.sum(self._p_s[inactive_idx])
-            i = np.random.choice(indexes[inactive_idx], p=subset_p_s)
+            i = np.random.choice(indexes[inactive_idx])
             param_ = param.copy()
             param_.BinAddOneBasis(i)
             
         else: 
             # death
             active_idx = param._basis_active
-            subset_p_s = self._p_s[active_idx] / np.sum(self._p_s[active_idx])
-            i = np.random.choice(indexes[active_idx], p=subset_p_s)
+            i = np.random.choice(indexes[active_idx])
             param_ = param.copy()
             param_.BinAddOneBasis(i)
             
@@ -83,27 +84,18 @@ class Proposal:
         return param_ 
     
     def PDF(self, p0, p1):
-        # Note that the same-dimensional switching cancels out in the ratio, hence not included  
-        indexes = np.arange(len(self._basis))
-        n_active_p0 = np.sum(p0._basis_active)
-        n_active_p1 = np.sum(p1._basis_active)
-        flipped = indexes[np.bitwise_xor(p0._basis_active, p1._basis_active)][0]
-        
-        if n_active_p0 == n_active_p1: 
-            raise ValueError("p0 and p1 has the same number of active basis")
-        
         # if empty or complete 
         if n_active_p0 == 0 or n_active_p0 == len(self._basis):
-            return np.log(self._p_s[flipped])
+            return 0
         
         if n_active_p0 < n_active_p1:
             # birth
             inactive_idx = np.invert(p0._basis_active)            
-            return np.log(self._bd_prob) + np.log(self._p_s[flipped] / np.sum(self._p_s[inactive_idx]))
+            return np.log(self._bd_prob) 
         else: 
             # death 
             active_idx = p0._basis_active            
-            return np.log(1 - self._bd_prob) + np.log(self._p_s[flipped] / np.sum(self._p_s[active_idx]))
+            return np.log(1 - self._bd_prob) 
         
     def ParamType(self): 
         return self._Param.__name__

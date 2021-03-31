@@ -38,22 +38,48 @@ def BronKerbosch2(G, P, R=None, X=None):
     
 def mode(G, delta, D, N=100): 
     """
-    G: Graph as dict of lists 
+    Find the mode of a G-Wishart distribution.
+    
+    `G` (`Graph` object).
+    `delta` is the degree of freedom of the distribution.
+    `D` is the rate or inverse scale matrix of the distribution and must be symmetric positive definite.
+    
+    The notation in this function follows Section 2.4 in Lenkoski (2013, arXiv:1304.1350v1).
+    
+    The optimization procedure is presented in Algorithm 17.1 of
+    the Elements of Statistical Learning by Hastie et al.
+    
+    Compare Equation 7 from
+    https://proceedings.neurips.cc/paper/2009/hash/a1519de5b5d44b31a01de013b9b51a80-Abstract.html
+    with Equation 17.11 of the Elements of Statistical Learning by Hastie et al.
+    to understand why we set `Σ = rate / (df - 2.0)`.
     """
+    n = len(G)
     L = D / (delta - 2)
-    K = np.eye(D.shape[0]) 
-    C_l = list(BronKerbosch1(G, G.keys()))
-    for i in range(N):
+    K = copy.deepcopy(L)
+    index_rgwish = [np.delete(range(n), j) for j in range(n)]
+    
+    while True:
         K_ = copy.deepcopy(K)
-        for c in C_l:
-            not_c = tuple(sorted(list(set(range(len(G))) - set(c))))
-            c = tuple(c)
-            B_ = K[not_c,:][:, c]
-            C_ = K[c,:][:, not_c]
-            D_ = K[not_c,:][:, not_c]
-            K[np.ix_(c, c)]= np.linalg.inv(L[c,:][:,c]) + (C_ @ np.linalg.inv(D_) @ B_) 
-        if np.max(np.abs(K - K_)) < 1e-100: break 
-    return K 
+        
+        for j in range(n):
+            β_hat_j = np.zeros(n)
+            N_j = G[j]
+            
+            # Step 2a and 2b
+            if len(N_j) > 0:
+                β_hat_j[N_j] = np.linalg.solve(K[N_j, :][:, N_j], L[N_j, j])
+            
+            # Step 2c
+            tmp = K[index_rgwish[j], :][:, index_rgwish[j]] @ β_hat_j[index_rgwish[j]]
+            K[j, index_rgwish[j]] = tmp
+            K[index_rgwish[j], j] = tmp
+            
+        # Step 3: Stop if converged.
+        if np.mean((K - K_)**2) < 1e-8:
+            break
+    
+    return np.linalg.inv(K) # Step 4
 
 def constrained_cov(G, L, M, N=100):
     """

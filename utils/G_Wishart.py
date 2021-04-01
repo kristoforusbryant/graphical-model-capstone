@@ -28,7 +28,7 @@ class G_Wishart:
         res = self.IG_Exact()
         if not np.isnan(res):
             return res
-        if self.GetDelta() > 50: 
+        if self.GetDelta() > 50 or len(self.G) > 50: 
             return self.IG_LA()
         else: 
             return self.IG_MC()

@@ -2,6 +2,40 @@ import numpy as np
 import copy
 import random  
     
+def BronKerbosch1(G, P, R=None, X=None):
+    P = set(P)
+    R = set() if R is None else R
+    X = set() if X is None else X
+    if not P and not X:
+        yield R
+    while P:
+        v = P.pop()
+        yield from BronKerbosch1(G,
+            P=P.intersection(G[v]), R=R.union([v]), X=X.intersection(G[v]))
+        X.add(v)
+
+def BronKerbosch2(G, P, R=None, X=None):
+    """ 
+    Bron-Kerbosch Algorithm with Pivot from Bron and Kerbosch(1973)
+    G: Graph as dict of lists
+    """
+    P = set(P)
+    R = set() if R is None else R
+    X = set() if X is None else X
+    if not P and not X:
+        yield R
+    try:
+        u = list(P.union(X))[0]
+        S = P.difference(G[u])
+    # if union of P and X is empty
+    except IndexError:
+        S = P
+    for v in S:
+        yield from BronKerbosch2(G, 
+            P=P.intersection(G[v]), R=R.union([v]), X=X.intersection(G[v]))
+        P.remove(v)
+        X.add(v)
+    
 def mode(G, delta, D, N=100): 
     """
     Find the mode of a G-Wishart distribution.

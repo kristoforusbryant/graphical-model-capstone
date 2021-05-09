@@ -16,12 +16,12 @@ def hub(n, v=0):
 
 def hybrid(n, k):
     # path part
-    dol = {i:[i-1,i+1] for i in range(1,k-1)}
+    dol = {i:[i-1,i+1] for i in range(1,k)}
     dol[0] = [1]
     # hub part
-    for i in range(k+1, n):
+    for i in range(k, n):
         dol[i] = [k]
-    dol[k] = [k-1] + list(range(k+1,n))
+    dol[k] = [k-1] + list(range(k,n))
     return dol
 
 def cycle_basis(T): 

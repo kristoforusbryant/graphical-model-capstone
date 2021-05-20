@@ -2,7 +2,7 @@
 Tests that the data generated corresponds to the graph
 """
 
-import utils.Graph as Graph
+from utils.Graph import Graph
 from tests.test_utils.generate_data import generate_data
 import numpy as np
 

@@ -19,3 +19,5 @@ def test_generate_data():
 
         threshold = n
         assert(np.sum(a != b) < threshold)
+
+# Larger matrices require very large number of samples for it to converge to the correct graph

@@ -98,6 +98,14 @@ class Graph: # undirected, unweigheted graph
         if n is None:
             n = len(self._dol)
         self._dol = {i: list(set(range(n)) - set([i])) for i in range(n)}
+    def SetRandom(self):
+        n = self.GetSize()
+        a = np.random.randint(0, 2, n * (n-1) // 2)
+        AdjM = np.zeros((n,n))
+        AdjM[np.triu_indices(n, 1)] = a
+        AdjM += np.transpose(AdjM)
+        self.SetFromAdjM(AdjM)
+
 
     # Adding and Removing Edges
     def AddEdge(self,i,j):

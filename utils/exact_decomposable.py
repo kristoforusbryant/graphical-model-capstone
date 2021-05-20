@@ -13,20 +13,20 @@ def IG_clique(delta, D):
     return (delta + n - 1) * n / 2 * np.log(2)  +  LogGamma_n((delta + n - 1)/2, n) - (delta + n -1)/2 * np.log(np.linalg.det(D))
 
 def is_complete_subset(dol, nodes):
-    for v in list(nodes): 
-        if nodes - set(dol[v] + [v]): 
+    for v in list(nodes):
+        if nodes - set(dol[v] + [v]):
             return False
     return True
 
-def IG_decomposable(dol, delta, D): 
+def IG_decomposable(dol, delta, D):
     primes, seps = primecomps(dol)
-    if not sum([is_complete_subset(dol, p) for p in primes]) > 0: 
+    if not sum([is_complete_subset(dol, p) for p in primes]) > 0:
         return np.nan
-    
+
     acc = 0
-    for p in primes: 
+    for p in primes:
         acc += IG_clique(delta, D[list(p),:][:, list(p)])
     for s in seps:
-        if s: 
+        if s:
             acc -= IG_clique(delta, D[list(s),:][:, list(s)])
     return acc

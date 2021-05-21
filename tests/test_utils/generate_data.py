@@ -14,17 +14,18 @@ def generate_data(n, m, g, seed=None, threshold=.5):
     K = np.linalg.inv(C_star)
     triu = np.triu_indices(n, 1)
 
-    count = 0
-    while not ((np.abs(K[triu]) > threshold).astype(int) == g.GetBinaryL()).all():
-        T = np.random.random((n,n))
-        C = T.transpose() @ T
-        C_star = constrained_cov(g.GetDOL(), C, np.eye(n)) # constrain zeroes of the matrices
-        K = np.linalg.inv(C_star)
-        triu = np.triu_indices(n, 1)
+    if threshold:
+        count = 0
+        while not ((np.abs(K[triu]) > threshold).astype(int) == g.GetBinaryL()).all():
+            T = np.random.random((n,n))
+            C = T.transpose() @ T
+            C_star = constrained_cov(g.GetDOL(), C, np.eye(n)) # constrain zeroes of the matrices
+            K = np.linalg.inv(C_star)
+            triu = np.triu_indices(n, 1)
 
-        if count > 50:
-            raise ValueError("Can't find precision matrix with large enough non-zero values, \
-                              try tweaking the threshold parameter.")
+            if count > 50:
+                raise ValueError("Can't find precision matrix with large enough non-zero values, \
+                                try tweaking the threshold parameter.")
 
     assert(((np.abs(np.linalg.inv(C_star)) > 1e-10)[triu] == g.GetBinaryL()).all())
 

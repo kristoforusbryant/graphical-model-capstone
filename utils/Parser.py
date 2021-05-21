@@ -7,9 +7,9 @@ class Parser:
         parser = argparse.ArgumentParser()
         parser.add_argument('--data', type=str, help="path to file containing the observation matrix", required=True)
         parser.add_argument('--outfile', type=str, help="path to file that will contain the result", required=True)
-        parser.add_argument('--metadata', action='store_true', help="path to file that contains metadata of the MCMC run")
+        parser.add_argument('--it', type=int, help="number of MCMC iterations.", required=True)
         parser.add_argument('--basis', type=str, help="'edge' or 'cycle' basis", default ='cycle')
-        parser.add_argument('--treeprior', type=str, help="spanning tree that generates the cycle basis ('all', 'star', or 'path')",
+        parser.add_argument('--treeprior', type=str, help="spanning tree that generates the cycle basis ('all', 'hubs', or 'path')",
                              default ='all')
         parser.add_argument('-r', type=int, help="success parameter of the negative binomial hyperprior", default=6)
         parser.add_argument('-p', type=float, help="probability parameter of the negative binomial hyperprior", default=.75)

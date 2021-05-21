@@ -4,14 +4,14 @@ from utils import Parser
 def test_parser():
     """ test that parser returns the correct types
     """
-    sys_args = ["--data",  "observations.csv", "--outfile", "results/samples.dat",
-                "--metadata", "--basis", "cycle", "--treeprior", "all", "-r", "6",
+    sys_args = ["--data",  "observations.csv", "--outfile", "results/samples.dat", "--it", "7500",
+                "--basis", "cycle", "--treeprior", "all", "-r", "6",
                 "-p", ".75", "--cob-freq", "100", "--seed", "123"]
 
     parser = Parser.Parser(sys_args)
     assert(isinstance(parser.args.data, str))
     assert(isinstance(parser.args.outfile, str))
-    assert(isinstance(parser.args.metadata, bool))
+    assert(isinstance(parser.args.it, int))
     assert(isinstance(parser.args.basis, str))
     assert(isinstance(parser.args.treeprior, str))
     assert(isinstance(parser.args.r, int))

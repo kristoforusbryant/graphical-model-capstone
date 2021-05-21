@@ -85,6 +85,8 @@ class MCMC_Sampler:
                 self.res['SAMPLES'].append(id_p)
                 self.res['LIK'].append(lik_p)
                 self.res['PRIOR'].append(prior_p)
+                params = self.prop.Revert(params_)
+
 
         self.time = time.time() - tic # in seconds
         self.iter = it

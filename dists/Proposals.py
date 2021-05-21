@@ -19,10 +19,11 @@ class BasisWalk:
         # When basis changes
         if self._skip is not None:
             if self.counter % self._skip != 0:
-                param_ = param.copy()
+                param_ = param
             else:
                 M = COBM(param._tree)
-                param_ = param.copy()
+                self._temp = param.copy()
+                param_ = param
 
                 # Make one switch first
                 i = np.random.choice(range(len(param_._basis)))
@@ -44,18 +45,27 @@ class BasisWalk:
             # Same procedure as basis_size.py
             i = np.random.choice(range(len(param_._basis)))
             param_.BinAddOneBasis(i)
+            self._temp = i
 
         # When basis stays constant
         else:
-            param_ = param.copy()
+            param_ = param
             # Same procedure as basis_size.py
             i = np.random.choice(range(len(param_._basis)))
             param_.BinAddOneBasis(i)
+            self._temp = i
 
         return param_
 
-    def Revert(self, p_):
-        raise NotImplementedError
+    def Revert(self,p_):
+        if self._skip is None:
+            p_.BinAddOneBasis(self._temp)
+            return p_
+        elif self.counter % self._skip != 0:
+            p_.BinAddOneBasis(self._temp)
+            return p_
+        else:
+            return self._temp
 
 
     def PDF(self, p, p_):

@@ -4,13 +4,29 @@ Given a graph, simulate data coming from one precision matrix corresponding to t
 
 from utils.laplace_approximation import constrained_cov
 import numpy as np
-def generate_data(n, m, g, seed=None):
+def generate_data(n, m, g, seed=None, threshold=.5):
     if seed is not None:
         np.random.seed(seed)
 
     T = np.random.random((n,n))
     C = T.transpose() @ T
     C_star = constrained_cov(g.GetDOL(), C, np.eye(n)) # constrain zeroes of the matrices
+    K = np.linalg.inv(C_star)
+    triu = np.triu_indices(n, 1)
+
+    count = 0
+    while not ((np.abs(K[triu]) > threshold).astype(int) == g.GetBinaryL()).all():
+        T = np.random.random((n,n))
+        C = T.transpose() @ T
+        C_star = constrained_cov(g.GetDOL(), C, np.eye(n)) # constrain zeroes of the matrices
+        K = np.linalg.inv(C_star)
+        triu = np.triu_indices(n, 1)
+
+        if count > 50:
+            raise ValueError("Can't find precision matrix with large enough non-zero values, \
+                              try tweaking the threshold parameter.")
+
+    assert(((np.abs(np.linalg.inv(C_star)) > 1e-10)[triu] == g.GetBinaryL()).all())
 
     data = np.random.multivariate_normal(np.zeros(n), C_star, m)
     return data

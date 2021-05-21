@@ -1,3 +1,4 @@
+from typing import Set
 import networkx as nx
 import warnings
 import numpy as np
@@ -79,8 +80,10 @@ class Graph: # undirected, unweigheted graph
     # Manually Setting
     def SetFromG(self, other):
         self._dol = other._dol
+
     def SetFromDOL(self,dol):
         self._dol = dol
+
     def SetFromAdjM(self, AdjM):
         AdjM = np.array(AdjM)
         self._dol = {i:[] for i in range(AdjM.shape[0])}
@@ -89,15 +92,25 @@ class Graph: # undirected, unweigheted graph
                 if AdjM[i,j]:
                     self._dol[i].append(j)
                     self._dol[j].append(i)
+
+    def SetFromString(self, s):
+        A = np.zeros((len(self), len(self)))
+        triu = np.triu_indices(len(self), 1)
+        A[triu] = np.array(list(s)).astype(int)
+        self.SetFromAdjM(A)
+
     def SetFromEdgeL(self, EdgeL):
         self.SetEmpty()
         self.AddEdges(EdgeL)
+
     def SetEmpty(self):
         self._dol = {i: [] for i in range(len(self))}
+
     def SetComplete(self, n=None):
         if n is None:
             n = len(self._dol)
         self._dol = {i: list(set(range(n)) - set([i])) for i in range(n)}
+
     def SetRandom(self):
         n = self.GetSize()
         a = np.random.randint(0, 2, n * (n-1) // 2)
@@ -105,6 +118,7 @@ class Graph: # undirected, unweigheted graph
         AdjM[np.triu_indices(n, 1)] = a
         AdjM += np.transpose(AdjM)
         self.SetFromAdjM(AdjM)
+
 
 
     # Adding and Removing Edges

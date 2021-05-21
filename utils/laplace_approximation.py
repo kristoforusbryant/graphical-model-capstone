@@ -143,10 +143,6 @@ def laplace_approx (G, delta, D, as_log_prob=True):
 
     h = -0.5*(np.trace(np.transpose(K) @ D) - (delta - 2.0)*np.linalg.slogdet(K)[1])
     H = hessian(K, V, delta)
-    print(H)
-    print(V)
-    print(len(V))
-    print(np.linalg.slogdet(-H)[1])
     # The minus sign in front of `H` is not there in Lenkoski and Dobra (2011, Section 4).
     # I think that it should be there as |H| can be negative while |-H| cannot.
     if as_log_prob:

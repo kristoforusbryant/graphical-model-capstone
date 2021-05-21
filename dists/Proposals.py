@@ -11,6 +11,7 @@ class BasisWalk:
         self.tree_prior = tree_prior
         self.counter = 0
         self._skip = skip
+        self._temp = None # to store (part of) previous parameter
 
     __name__ = 'basis_size_with_tree_prior'
 
@@ -44,7 +45,6 @@ class BasisWalk:
             i = np.random.choice(range(len(param_._basis)))
             param_.BinAddOneBasis(i)
 
-
         # When basis stays constant
         else:
             param_ = param.copy()
@@ -53,6 +53,10 @@ class BasisWalk:
             param_.BinAddOneBasis(i)
 
         return param_
+
+    def Revert(self, p_):
+        raise NotImplementedError
+
 
     def PDF(self, p, p_):
         return 0

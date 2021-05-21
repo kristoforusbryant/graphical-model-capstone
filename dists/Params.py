@@ -7,8 +7,8 @@ from utils.generate_basis import edge_basis, cycle_basis
 class GraphAndBasis(Graph):
     def __init__(self, n, dol=None, tree=None, basis=None):
         super().__init__(n, dol)
+        self._tree = tree
         if tree:
-            self._tree = tree
             basis = cycle_basis(tree)
         elif basis:
             pass
@@ -35,10 +35,11 @@ class GraphAndBasis(Graph):
             self.BinAddOneBasis(i)
 
     def __repr__(self):
-        #", \nbasis: " + self._basis.__str__()
         return "G: " + self._dol.__str__() + ", \nactive: " + self._basis_active.__str__() +\
                     ", \ntree:" + self._tree.__str__()
+
     def copy(self):
         return copy.deepcopy(self)
+
     def __name__(self):
         return "Graph and Basis"

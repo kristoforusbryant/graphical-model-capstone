@@ -7,8 +7,9 @@ class BasisCount:
         self._n = n
         self._Param = Param
         self._prob_c = prob_c # for 0, ... number of basis
+        self._tree_prior = tree_prior
         if tree_prior:
-            self._tree_prior = tree_prior
+            pass
         elif basis:
             self._basis = basis
         else:
@@ -17,7 +18,7 @@ class BasisCount:
     __name__ = 'basis_count_size'
 
     def Sample(self):
-        if self.tree_prior:
+        if self._tree_prior:
             # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
             T_ = self._tree_prior.Sample()
             param = self._Param(self._n, basis=cycle_basis(T_), tree=T_)

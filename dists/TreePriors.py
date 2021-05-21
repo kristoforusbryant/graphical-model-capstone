@@ -70,7 +70,7 @@ class Hubs:
     def ParamType(self):
         return self._Param.__name__
 
-class Path:
+class Paths:
     def __init__(self, n, G=None):
         self._n = n
         if G:

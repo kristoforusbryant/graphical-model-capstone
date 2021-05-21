@@ -78,3 +78,11 @@ def create_edge_matrix_from_binary_str(strings, n):
     edge_M[np.triu_indices(n, 1)] = l / len(strings)
     return edge_M
 
+def str_list_to_adjm(n, str_list):
+    AdjM = np.zeros((n,n))
+    triu = np.triu_indices(n, 1)
+    AdjM[triu] = np.sum([np.array(list(s)).astype(int) for s in str_list], axis=0)
+    return (AdjM + AdjM.transpose()) / len(str_list)
+
+def str_list_to_median_graph(n, str_list, threshold=.5):
+    return (str_list_to_adjm(n, str_list) > threshold).astype(int)

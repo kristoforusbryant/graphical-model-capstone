@@ -27,7 +27,7 @@ def hybrid(n, k):
 def edge_basis(n):
     triu = np.triu_indices(n,1)
     basis = []
-    for i,j in list(zip(triu[0], triu[1])):
+    for i, j in list(zip(triu[0], triu[1])):
         g = Graph(n)
         g.AddEdge(i,j)
         basis.append(g.copy())

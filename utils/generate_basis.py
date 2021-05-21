@@ -24,6 +24,15 @@ def hybrid(n, k):
     dol[k] = [k-1] + list(range(k,n))
     return dol
 
+def edge_basis(n):
+    triu = np.triu_indices(n,1)
+    basis = []
+    for i,j in list(zip(triu[0], triu[1])):
+        g = Graph(n)
+        g.AddEdge(i,j)
+        basis.append(g.copy())
+    return basis
+
 def cycle_basis(T):
     # TODO: check if T is a spanning tree of its nodes
     basis = []

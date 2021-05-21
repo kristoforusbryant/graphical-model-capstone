@@ -24,6 +24,12 @@ def hybrid(n, k):
     dol[k] = [k-1] + list(range(k,n))
     return dol
 
+def circle_graph(n):
+    dol = {i:[i-1,i+1] for i in range(1,n-1)}
+    dol[0] = [1, n-1]
+    dol[n-1] = [0, n-2]
+    return dol
+
 def edge_basis(n):
     triu = np.triu_indices(n,1)
     basis = []

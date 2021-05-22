@@ -1,4 +1,9 @@
 import numpy as np
+import galois
+GF2 = galois.GF(2)
+
+def inverse_GF2(A):
+    return np.linalg.inv(GF2(A))
 
 # https://npdeep.github.io/matrix-inversion-gf2.html
 def RREF_binary(A):
@@ -62,6 +67,68 @@ def inverse_binary(A):
         raise Exception("Matrix has to be square")
 
     augmented_matrix = np.hstack([A, np.eye(n_rows)]) # Augmented matrix
+    rref_form = RREF_binary(augmented_matrix)
+    # return the second half of the augmented matrix
+    return rref_form[:, n_rows:]
+
+
+def RREF_binary_(A):
+    """Converts a matrix to reduced row echelon form (RREF)"""
+    n_rows, n_cols = A.shape
+    A = A.astype(bool)
+
+    # Compute row echelon form (REF)
+    current_row = 0
+    for j in range(n_cols):  # For each column
+        if current_row >= n_rows:
+            break
+
+        pivot_row = current_row
+
+        # find the first row in this column with non-zero entry.
+        # this becomes the pivot row
+        while pivot_row < n_rows and A[pivot_row, j] == 0:
+            pivot_row += 1
+
+        # if we reach the end, this column cannot be eliminated.
+        if pivot_row == n_rows:
+            continue
+
+        # otherwise, swap current row with the pivot row
+        A[[current_row, pivot_row]] = A[[pivot_row, current_row]]
+
+        pivot_row = current_row
+        current_row += 1
+
+        tmp_range = np.arange(current_row, n_rows)
+        tmp_range = tmp_range[A[tmp_range, j]]
+        A[tmp_range, :] ^= A[pivot_row, :]
+
+    # Compute reduced row echelon form (RREF)
+    # in the RREF form, there is only one non-zero entry in a column.
+    for i in reversed(range(current_row)):
+        # Find pivot
+        tmp = A[i, :].nonzero()[0]
+
+        if len(tmp) == 0:
+            continue  # Skip this all-zero row
+
+        # find the column with the first non-zero entry.
+        pivot_col = tmp[0]
+
+        tmp_range = np.arange(i)
+        tmp_range = tmp_range[A[tmp_range, pivot_col]]
+        A[tmp_range, :] ^= A[i, :]
+
+    return A
+
+
+def inverse_binary_(A):
+    n_rows, n_cols = A.shape
+    if n_rows != n_cols:
+        raise Exception("Matrix has to be square")
+
+    augmented_matrix = np.hstack([A, np.eye(n_rows, dtype=bool)]) # Augmented matrix
     rref_form = RREF_binary(augmented_matrix)
     # return the second half of the augmented matrix
     return rref_form[:, n_rows:]

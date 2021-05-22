@@ -9,13 +9,12 @@ class GraphAndBasis(Graph):
         super().__init__(n, dol)
         self._tree = tree
         if tree:
-            basis = cycle_basis(tree)
+            self._basis = cycle_basis(tree)
         elif basis:
-            pass
+            self._basis = basis
         else:
-            basis = edge_basis(n)
-        self._basis = basis # list of DOLs
-        self._basis_active = np.zeros(len(basis), dtype=bool)
+            self._basis = edge_basis(n)
+        self._basis_active = np.zeros(len(self._basis), dtype=bool)
 
     def GetBasis(self):
         return self._basis

@@ -8,7 +8,7 @@ import numpy as np
 
 def test_constrained_cov_0():
     n = 10
-    for _ in range(50):
+    for _ in range(10):
         g = Graph(n)
         g.SetRandom()
         a = g.GetAdjM()[np.triu_indices(n, 1)]

@@ -1,6 +1,6 @@
 import numpy as np
 from utils.generate_basis import cycle_basis, COBM
-from utils.inverse_binary import inverse_binary
+from utils.inverse_binary import inverse_GF2, GF2
 
 
 class BasisWalk:
@@ -36,7 +36,7 @@ class BasisWalk:
                 param_._tree = T_
 
                 M_ = COBM(param_._tree) # M and M_ are COBM in the entire space
-                subM = (inverse_binary(M_) @ M % 2)[:len(param_._basis), :len(param_._basis)]
+                subM = (inverse_GF2(M_) @ GF2(M) % 2)[:len(param_._basis), :len(param_._basis)]
                 _basis_active = (subM @ param_._basis_active % 2)
                 param_._basis_active = _basis_active.astype(bool)
 

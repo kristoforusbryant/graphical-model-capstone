@@ -25,8 +25,8 @@ def one_edge_difference(g, g_):
 def test_proposal_Sample_no_COB():
     n = 10
     ct_prior = TruncatedNB(6, .75)
-    prior = BasisCount(n, GraphAndBasis, ct_prior, Uniform)
-    prop = BasisWalk(n, GraphAndBasis, Uniform)
+    prior = BasisCount(n, GraphAndBasis, ct_prior, Uniform(n))
+    prop = BasisWalk(n, GraphAndBasis, Uniform(n))
     np.random.seed(123)
     for _ in range(20):
         g = prior.Sample()

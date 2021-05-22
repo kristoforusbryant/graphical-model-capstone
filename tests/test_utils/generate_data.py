@@ -32,8 +32,8 @@ def generate_data(n, m, g, seed=None, threshold=.5):
     data = np.random.multivariate_normal(np.zeros(n), C_star, m)
     return data
 
-def generate_data_and_save(n, m, g, outfile, seed=None):
-    data = generate_data(n, m, g, seed)
+def generate_data_and_save(n, m, g, outfile, **kwargs):
+    data = generate_data(n, m, g, **kwargs)
 
     np.savetxt(outfile, data, delimiter=",")
     return 0

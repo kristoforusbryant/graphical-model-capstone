@@ -7,7 +7,7 @@ class BasisCount:
         self._n = n
         self._Param = Param
         self._prob_c = prob_c # for 0, ... number of basis
-        self._tree_prior = tree_prior
+        self._tree_prior = tree_prior(n)
         if tree_prior:
             pass
         elif basis:

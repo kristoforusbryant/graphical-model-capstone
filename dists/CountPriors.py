@@ -2,9 +2,9 @@ from scipy.stats import nbinom
 
 class TruncatedNB:
     # Assume Finite Support
-    def __init__(self, params):
-        self._r = params['r']
-        self._p = params['p']
+    def __init__(self, r, p):
+        self._r = r
+        self._p = p
         self._rv = nbinom(self._r, self._p)
 
     def __call__(self, size):

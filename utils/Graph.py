@@ -59,6 +59,11 @@ class Graph: # undirected, unweigheted graph
                     count += 1
         return count
 
+    def _sort_dol(self, dol):
+        for k in dol.keys():
+            dol[k] = sorted(dol[k])
+        return dol
+
     def __repr__(self):
         return self._dol.__str__()
     def __str__(self):
@@ -66,7 +71,8 @@ class Graph: # undirected, unweigheted graph
     def __len__(self):
         return len(self._dol)
     def __eq__(self, other):
-        return self._dol == other._dol
+        # TODO: can we ensure that dol is always sorted?
+        return self._sort_dol(self._dol) == self._sort_dol(other._dol)
     def copy(self):
         return copy.deepcopy(self)
 
@@ -118,8 +124,6 @@ class Graph: # undirected, unweigheted graph
         AdjM[np.triu_indices(n, 1)] = a
         AdjM += np.transpose(AdjM)
         self.SetFromAdjM(AdjM)
-
-
 
     # Adding and Removing Edges
     def AddEdge(self,i,j):

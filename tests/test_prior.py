@@ -9,20 +9,13 @@ import numpy as np
 def in_cycle_space(g):
     return np.all(list(map(lambda l: len(l) % 2 == 0, g._dol.values())))
 
-# def g_is_sum_of_basis(g):
-#     temp = Graph(len(g))
-#     for i in range(len(g._basis)):
-#         if g._basis_active[i]:
-#             GraphAndBasis.BinaryAdd(temp, g._basis[i])
-#     return temp == g
-
 def g_is_sum_of_basis(g):
-    sob = np.sum(g._basis.transpose()[g._basis_active], axis = 0)
+    sob = np.sum(g._basis.transpose()[np.where(g._basis_active)], axis = 0)
     return (sob == g.GetBinaryL()).all()
 
 def test_prior_Sample():
     n = 10
-    ct_prior = TruncatedNB(6, .75)
+    ct_prior = TruncatedNB(n, .75)
     prior = BasisCount(n, GraphAndBasis, ct_prior, Uniform(n))
     np.random.seed(123)
     for _ in range(20):

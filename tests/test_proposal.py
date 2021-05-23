@@ -10,15 +10,8 @@ import numpy as np
 def in_cycle_space(g):
     return np.all(list(map(lambda l: len(l) % 2 == 0, g._dol.values())))
 
-# def g_is_sum_of_basis(g):
-#     temp = Graph(len(g))
-#     for i in range(len(g._basis)):
-#         if g._basis_active[i]:
-#             GraphAndBasis.BinaryAdd(temp, g._basis[i])
-#     return temp == g
-
 def g_is_sum_of_basis(g):
-    sob = np.sum(g._basis.transpose()[g._basis_active], axis = 0)
+    sob = np.sum(g._basis.transpose()[np.where(g._basis_active)], axis = 0)
     return (sob == g.GetBinaryL()).all()
 
 def one_edge_difference(g, g_):

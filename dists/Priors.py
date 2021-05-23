@@ -9,7 +9,7 @@ class BasisCount:
         self._prob_c = prob_c # for 0, ... number of basis
         if tree_prior:
             self._tree_prior = tree_prior
-        elif basis:
+        elif basis is not None:
             self._basis = basis
             self._tree_prior = None
         else:
@@ -27,12 +27,12 @@ class BasisCount:
             param = self._Param(self._n, basis=self._basis)
 
         # the count is distributed as p_c
-        unscaled_p_c = np.array([self._prob_c(k) for k in range(len(param._basis) + 1)])
+        unscaled_p_c = np.array([self._prob_c(k) for k in range(param._basis.shape[1] + 1)])
         p_c = unscaled_p_c / np.sum(unscaled_p_c)
-        count = np.random.choice(range(len(param._basis) + 1), p=p_c)
+        count = np.random.choice(range(param._basis.shape[1] + 1), p=p_c)
 
         # the sizes of the bases are distributed as p_s
-        idx = np.random.choice(range(len(param._basis)), size=count, replace=False)
+        idx = np.random.choice(range(param._basis.shape[1]), size=count, replace=False)
         for i in idx:
             param.BinAddOneBasis(i)
 
@@ -48,7 +48,7 @@ class Uniform:
     def __init__(self, n, Param, basis=None):
         self._n = n
         self._Param = Param
-        if basis:
+        if basis is not None:
             self._basis = basis
         else:
             self._basis = edge_basis(n)

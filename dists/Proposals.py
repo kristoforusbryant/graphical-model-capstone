@@ -8,7 +8,7 @@ class BasisWalk:
         # rv_size: distribution of the basis size
         self._n = n
         self._Param = Param
-        self.tree_prior = tree_prior
+        self._tree_prior = tree_prior
         self.counter = 0
         self._skip = skip
         self._temp = None # to store (part of) previous parameter
@@ -26,7 +26,7 @@ class BasisWalk:
                 param_ = param
 
                 # Make one switch first
-                i = np.random.choice(range(len(param_._basis)))
+                i = np.random.choice(range(param_._basis.shape[1]))
                 param_.BinAddOneBasis(i)
 
                 # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
@@ -36,14 +36,14 @@ class BasisWalk:
                 param_._tree = T_
 
                 M_ = COBM(param_._tree) # M and M_ are COBM in the entire space
-                subM = (inverse_GF2(M_) @ GF2(M) % 2)[:len(param_._basis), :len(param_._basis)]
+                subM = (inverse_GF2(M_) @ GF2(M) % 2)[:param_._basis.shape[1], :param_._basis.shape[1]]
                 _basis_active = (subM @ param_._basis_active % 2)
                 param_._basis_active = _basis_active.astype(bool)
 
             self.counter += 1
 
             # Same procedure as basis_size.py
-            i = np.random.choice(range(len(param_._basis)))
+            i = np.random.choice(range(param_._basis.shape[1]))
             param_.BinAddOneBasis(i)
             self._temp = i
 
@@ -51,7 +51,7 @@ class BasisWalk:
         else:
             param_ = param
             # Same procedure as basis_size.py
-            i = np.random.choice(range(len(param_._basis)))
+            i = np.random.choice(range(param_._basis.shape[1]))
             param_.BinAddOneBasis(i)
             self._temp = i
 

@@ -8,13 +8,14 @@ class GraphAndBasis(Graph):
     def __init__(self, n, dol=None, tree=None, basis=None):
         super().__init__(n, dol)
         self._tree = tree
+        # basis is n_edges x n_basis array
         if tree:
             self._basis = cycle_basis(tree)
-        elif basis:
+        elif basis is not None:
             self._basis = basis
         else:
             self._basis = edge_basis(n)
-        self._basis_active = np.zeros(len(self._basis), dtype=bool)
+        self._basis_active = np.zeros(self._basis.shape[1], dtype=bool)
 
     def GetBasis(self):
         return self._basis
@@ -25,9 +26,18 @@ class GraphAndBasis(Graph):
     def SetBasis(self, basis):
         self._basis = basis
 
+    def _graph_from_binarr(self, n, a):
+        triu_l = np.vstack(np.triu_indices(n,1)).transpose()
+        dol = {i:[] for i in range(n)}
+        for i, j in triu_l[np.where(a)[0]]:
+            dol[i].append(j)
+            dol[j].append(i)
+        return Graph(n, dol)
+
     def BinAddOneBasis(self, idx):
         self._basis_active[idx] = not self._basis_active[idx]
-        self.BinaryAdd(self._basis[idx])
+        b = self._graph_from_binarr(len(self), self._basis.transpose()[idx])
+        self.BinaryAdd(b)
 
     def BinAddBasis(self, idx_l):
         for i in idx_l:

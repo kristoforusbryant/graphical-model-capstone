@@ -23,7 +23,7 @@ class MCMC_Sampler:
         self.time = 0.0
         self.iter = 0
         self.outfile = outfile
-        self.last_param = None
+        self.last_params = None
 
     def run(self, it=7500, fixed_init=None):
         tic = time.time()
@@ -38,6 +38,14 @@ class MCMC_Sampler:
         lik_p = self.lik.PDF(params)
         prior_p = self.prior.PDF(params)
 
+        basis_id_p = ''.join(np.array(params._basis_active, dtype=str))
+        if params._tree:
+            tree_id_p = params._tree.GetID()
+        else:
+            tree_id_p = ''
+        self.lookup[id_p] = {'LIK': lik_p, 'PRIOR': prior_p,
+                               'BASIS_ID': basis_id_p, 'TREE_ID': tree_id_p}
+
         print(params)
         print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
 
@@ -47,7 +55,6 @@ class MCMC_Sampler:
 
             id_p_ = params_.GetID()
             self.res['PARAMS'].append(id_p_)
-
             # Fetch if memoised
             if id_p_ in self.lookup.keys():
                 lik_p_ = self.lookup[id_p_]['LIK']
@@ -55,11 +62,12 @@ class MCMC_Sampler:
             else:
                 lik_p_ = self.lik.PDF(params_)
                 prior_p_ = self.prior.PDF(params_)
-                basis_id_p_ = ''.join(params_._basis_active.astype(int).astype(str).tolist())
+                basis_id_p_ = ''.join(np.array(params_._basis_active, dtype=str))
                 if params_._tree:
                     tree_id_p_ = params_._tree.GetID()
                 else:
                     tree_id_p_ = ''
+
                 self.lookup[id_p_] = {'LIK': lik_p_, 'PRIOR': prior_p_,
                                     'BASIS_ID': basis_id_p_, 'TREE_ID': tree_id_p_}
 

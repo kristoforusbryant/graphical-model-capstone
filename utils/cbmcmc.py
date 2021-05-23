@@ -37,7 +37,6 @@ from dists.Params import GraphAndBasis
 def cbmcmc(data, outfile, it, basis='cycle', treeprior='all', r=6, p=.75, cob_freq=100, seed=123):
     data = np.loadtxt(data, delimiter=",")
     _, n = data.shape
-    print(n)
 
     # Bases and Tree Prior
     if basis =='edge':
@@ -45,15 +44,13 @@ def cbmcmc(data, outfile, it, basis='cycle', treeprior='all', r=6, p=.75, cob_fr
         tree_prior = None
         cob_freq = None
     elif  basis == 'cycle':
+        basis = None
         if  treeprior == 'all':
             tree_prior = dists.TreePriors.Uniform(n)
-            basis = cycle_basis(tree_prior.Sample())
         elif  treeprior == 'hub':
             tree_prior = dists.TreePriors.Hubs(n)
-            basis = cycle_basis(tree_prior.Sample())
         elif  treeprior == 'path':
             tree_prior = dists.TreePriors.Paths(n)
-            basis = cycle_basis(tree_prior.Sample())
         else:
             raise ValueError("Invalid tree prior")
     else:
@@ -68,10 +65,11 @@ def cbmcmc(data, outfile, it, basis='cycle', treeprior='all', r=6, p=.75, cob_fr
     prop = dists.Proposals.BasisWalk(n, GraphAndBasis, tree_prior, cob_freq)
 
     # Run MCMC
+    print("Starting MCMC...")
     sampler = MCMC_Sampler(prior, prop, lik, data, outfile= outfile)
     if seed:
         np.random.seed(seed)
-    sampler.run( it)
+    sampler.run(it)
 
     # Saving Results
     sampler.save_object()

@@ -39,7 +39,7 @@ class BasisCount:
         return param
 
     def PDF(self, param):
-        return np.log(self._prob_c(np.sum(param._basis_active)))
+        return np.log(self._prob_c(np.sum(np.array(param._basis_active, dtype=int))))
 
     def ParamType(self):
         return self._Param.__name__

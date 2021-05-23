@@ -2,6 +2,8 @@ from utils.Graph import Graph
 import numpy as np
 import copy
 from utils.generate_basis import edge_basis, cycle_basis
+import galois
+GF2 = galois.GF(2)
 
 # (Graph, Basis, Active Basis)
 class GraphAndBasis(Graph):
@@ -15,7 +17,7 @@ class GraphAndBasis(Graph):
             self._basis = basis
         else:
             self._basis = edge_basis(n)
-        self._basis_active = np.zeros(self._basis.shape[1], dtype=bool)
+        self._basis_active = GF2(np.zeros(self._basis.shape[1], dtype=int))
 
     def GetBasis(self):
         return self._basis
@@ -35,7 +37,7 @@ class GraphAndBasis(Graph):
         return Graph(n, dol)
 
     def BinAddOneBasis(self, idx):
-        self._basis_active[idx] = not self._basis_active[idx]
+        self._basis_active[idx] += GF2(1)
         b = self._graph_from_binarr(len(self), self._basis.transpose()[idx])
         self.BinaryAdd(b)
 

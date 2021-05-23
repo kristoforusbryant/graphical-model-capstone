@@ -81,12 +81,18 @@ def cut_basis(T):
         idx += 1
     return B
 
+def change_basis(g, t_):
+    """
+    Change the basis of g to that by t_
+    """
+    # M @ b -> e
+    M_ = GF2(cycle_basis_complete(t_))
+    active_ = np.linalg.solve(M_, GF2(g.GetBinaryL()))
 
-# change of basis matrix M: current -> std
-def COBM(T):
-    basis = cycle_basis(T) + cut_basis(T)
-    M = np.zeros((len(basis), len(basis)), dtype=int)
-    for i in range(len(basis)):
-        M[:,i] = basis[i].GetBinaryL()
-    return M
+    n = len(g)
+    cb = (n - 1) * (n - 2) // 2
+    g._basis_active = active_[:cb]
+    g._tree = t_
+    g._basis = M_[:, :cb]
 
+    return g

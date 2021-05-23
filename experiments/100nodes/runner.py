@@ -40,30 +40,30 @@ def edge_runner(t):
     d, o = t
     cbmcmc(d, o, it, 'edge')
     return 0
-p = Pool()
-p.map(edge_runner, edgeIO)
+pool = Pool()
+pool.map(edge_runner, edgeIO)
 
-# # All
-# def all_runner(t):
-#     d, o = t
-#     cbmcmc(d, o, it, 'cycle', 'all', r, p, cob_freq)
-#     return 0
-# p = Pool()
-# p.map(lambda d, o: cbmcmc(d, o, it, 'cycle', 'all', r, p, cob_freq), allIO)
+# All
+def all_runner(t):
+    d, o = t
+    cbmcmc(d, o, it, 'cycle', 'all', r, p, cob_freq)
+    return 0
+pool = Pool()
+pool.map(all_runner, allIO)
 
-# # Hub
-# def all_runner(t):
-#     d, o = t
-#     cbmcmc(d, o, it, 'cycle', 'hub', r, p, cob_freq)
-#     return 0
-# p = Pool()
-# p.map(lambda d, o: cbmcmc(d, o, it, 'cycle', 'hub', r, p, cob_freq), hubIO)
+# Hub
+def hub_runner(t):
+    d, o = t
+    cbmcmc(d, o, it, 'cycle', 'hub', r, p, cob_freq)
+    return 0
+pool = Pool()
+pool.map(hub_runner, hubIO)
 
-# # Path
-# def all_runner(t):
-#     d, o = t
-#     cbmcmc(d, o, it, 'cycle', 'path', r, p, cob_freq)
-#     return 0
-# p = Pool()
-# p.map(lambda d, o: cbmcmc(d, o, it, 'cycle', 'path', r, p, cob_freq), pathIO)
+# Path
+def path_runner(t):
+    d, o = t
+    cbmcmc(d, o, it, 'cycle', 'path', r, p, cob_freq)
+    return 0
+pool = Pool()
+pool.map(path_runner, pathIO)
 

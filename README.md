@@ -1,6 +1,6 @@
 # cbMCMC
 
-An efficient MCMC algorithm for graphical model inference using cycle-basis prior.
+An efficient MCMC algorithm for graphical model inference using Cycle Basis prior.
 
 ## Basis Usage
 ```python

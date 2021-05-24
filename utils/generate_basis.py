@@ -41,27 +41,27 @@ def cycle_basis(T):
     n = len(T)
     m = n * (n - 1) // 2
     cb = (n - 1) * (n - 2) // 2
-    B = GF2(np.zeros((m, cb)).astype(int))
+    B = GF2(np.zeros((m, cb), dtype=int))
     idx = 0
     for i in range(len(T)):
         for j in range(i):
             if j in T._dol[i]: continue
-            T_ = T.copy()
-            T_.AddEdge(i,j)
-            B[:, idx] = T_.GetSubgraph(T_.find_one_cycle(i, -1,[])).GetBinaryL()
+            T.AddEdge(i,j)
+            B[:, idx] = T.GetSubgraph(T.find_one_cycle(i, -1,[])).GetBinaryL()
+            T.RemoveEdge(i,j)
             idx += 1
     return B
 
 def cycle_basis_complete(T):
     m = len(T) * (len(T) - 1) // 2
-    B = GF2(np.zeros((m, m)).astype(int))
+    B = GF2(np.zeros((m, m), dtype=int))
     idx = 0
     for i in range(len(T)):
         for j in range(i):
             if j in T._dol[i]: continue
-            T_ = T.copy()
-            T_.AddEdge(i,j)
-            B[:, idx] = T_.GetSubgraph(T_.find_one_cycle(i, -1,[])).GetBinaryL()
+            T.AddEdge(i,j)
+            B[:, idx] = T.GetSubgraph(T.find_one_cycle(i, -1,[])).GetBinaryL()
+            T.RemoveEdge(i,j)
             idx += 1
     for i in np.where(T.GetBinaryL())[0]:
         B[i, idx] = 1
@@ -70,14 +70,14 @@ def cycle_basis_complete(T):
 
 def cut_basis(T):
     # Assuming Complete Graph
-    B = np.zeros((len(T) - 1, len(T) - 1).astype(int))
+    B = np.zeros((len(T) - 1, len(T) - 1), dtype=int)
     idx = 0
     for i,j in T.GetEdgeL():
-        T_minus_e = T.copy()
-        T_minus_e.RemoveEdge(i,j)
-        g = Graph(len(T_minus_e))
-        g.SetFromEdgeL(list(product(T_minus_e.ConnectedTo(i), T_minus_e.ConnectedTo(j))))
+        T.RemoveEdge(i,j)
+        g = Graph(len(T))
+        g.SetFromEdgeL(list(product(T.ConnectedTo(i), T.ConnectedTo(j))))
         B[:, idx] = g.GetBinaryL()
+        T.AddEdge(i,j)
         idx += 1
     return B
 

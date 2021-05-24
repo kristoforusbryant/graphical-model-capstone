@@ -21,6 +21,21 @@ def test_cycle_basis_complete():
         m = n * (n - 1) // 2
         assert(np.linalg.matrix_rank(GF2(cycle_basis_complete(t))) == m)
 
+
+# def test_new_cycle_basis():
+#     from utils.generate_basis import cycle_basis_
+#     n = 50
+#     tree_prior = Uniform(n)
+#     for _ in range(100):
+#         t = tree_prior.Sample()
+#         t_ = t.copy()
+
+#         b1 = cycle_basis(t_)
+#         assert(t_ == t)
+#         b2 = cycle_basis_(t_)
+#         assert(t_ == t)
+#         assert((b1 == b2).all())
+
 def test_change_basis():
     n = 20
     ct_prior = TruncatedNB(n, .75)

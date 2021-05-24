@@ -15,6 +15,7 @@ class Graph: # undirected, unweigheted graph
             self._dol = dol
         else:
             self._dol = {i: [] for i in range(n)}
+        self._name = ''
 
     # Getting and Printing
     def GetSize(self):
@@ -28,6 +29,8 @@ class Graph: # undirected, unweigheted graph
                 AdjM[i,k] = 1
                 AdjM[k,i] = 1
         return AdjM
+    def GetName(self):
+        return self._name
 
     def GetID(self):
         return ''.join(self.GetAdjM()[np.triu_indices(len(self), 1)].astype(str).tolist())
@@ -86,6 +89,8 @@ class Graph: # undirected, unweigheted graph
     # Manually Setting
     def SetFromG(self, other):
         self._dol = other._dol
+    def SetName(self, name):
+        self._name = name
 
     def SetFromDOL(self,dol):
         self._dol = dol

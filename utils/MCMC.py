@@ -109,4 +109,3 @@ class MCMC_Sampler:
     def continue_chain(self, it):
         self.run(it, fixed_init= self.last_params)
         return 0
-

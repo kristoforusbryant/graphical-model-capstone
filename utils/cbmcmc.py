@@ -34,7 +34,7 @@ import dists.TreePriors, dists.CountPriors
 import dists.Priors, dists.Likelihoods, dists.Proposals
 from dists.Params import GraphAndBasis
 
-def cbmcmc(data, outfile, it, basis='cycle', treeprior='all', r=6, p=.75, cob_freq=100, seed=123):
+def cbmcmc(data, outfile=None, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_freq=100, seed=123):
     data = np.loadtxt(data, delimiter=",")
     _, n = data.shape
 
@@ -57,7 +57,10 @@ def cbmcmc(data, outfile, it, basis='cycle', treeprior='all', r=6, p=.75, cob_fr
         raise ValueError("Invalid basis")
 
     # Count Prior
-    ct_prior = dists.CountPriors.TruncatedNB(r, p)
+    if r is None:
+        ct_prior = dists.CountPriors.TruncatedNB(data.shape[1], p)
+    else:
+        ct_prior = dists.CountPriors.TruncatedNB(r, p)
 
     # Prior, Likelihood, and Proposal
     prior = dists.Priors.BasisCount(n, GraphAndBasis, ct_prior, tree_prior, basis)
@@ -72,8 +75,9 @@ def cbmcmc(data, outfile, it, basis='cycle', treeprior='all', r=6, p=.75, cob_fr
     sampler.run(it)
 
     # Saving Results
-    sampler.save_object()
-    return 0
+    if outfile is not None:
+        sampler.save_object()
+    return sampler
 
 
 def main():

@@ -1,1 +1,4 @@
 *
+!vis/basis_traces/*
+!vis/post_traces/*
+!vis/size_traces/*

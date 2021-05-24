@@ -30,8 +30,8 @@ random1 = prior.Sample()
 # Random Graphs from the Cycle space complement
 print("Generating Graphs from the Cycle space complement...")
 np.random.seed(123)
-random2 = GraphAndBasis(n, nx.to_dict_of_lists(nx.erdos_renyi_graph(n, .2)))
-random3 = GraphAndBasis(n, nx.to_dict_of_lists(nx.barabasi_albert_graph(n, 2)))
+random2 = GraphAndBasis(n, nx.to_dict_of_lists(nx.erdos_renyi_graph(n, .2, seed=123)))
+random3 = GraphAndBasis(n, nx.to_dict_of_lists(nx.barabasi_albert_graph(n, 2, seed=123)))
 
 # List of graphs
 graphs = [empty, circle, random0, random1, random2, random3]

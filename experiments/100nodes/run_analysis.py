@@ -37,6 +37,7 @@ def str_to_int_list(s):
 def main():
     files = [s for s in os.listdir('results') if '.pkl' in s]
     l = ['basis', 'graph', 'n', 'iter', 'time',
+         'accept_rate', 'max_posterior', 'states_visited',
          'IAT_posterior', 'IAT_sizes', 'IAT_bases',
          'TP', 'TN', 'FP', 'FN']
     d = {k:[] for k in l}
@@ -54,10 +55,12 @@ def main():
         d['iter'].append(sampler.iter)
         d['time'].append(sampler.time)
 
+
         # Mixing Performance
-        posts = np.array(sampler.res['LIK'], dtype=float) + np.array(sampler.res['PRIOR'], dtype=float)
-        sizes = list(map(lambda s: np.sum(str_to_int_list(s)), sampler.res['SAMPLES']))
-        n_bases = list(map(lambda s: np.sum(str_to_int_list(sampler.lookup[s]['BASIS_ID'])), sampler.res['SAMPLES']))
+        burnin = 5000
+        posts = np.array(sampler.res['LIK'], dtype=float) + np.array(sampler.res['PRIOR'], dtype=float)[burnin:]
+        sizes = list(map(lambda s: np.sum(str_to_int_list(s)), sampler.res['SAMPLES']))[burnin:]
+        n_bases = list(map(lambda s: np.sum(str_to_int_list(sampler.lookup[s]['BASIS_ID'])), sampler.res['SAMPLES']))[burnin:]
         plot_traces(posts, 'Log Posterior', 'results/vis/post_traces/' + b_str + '_' + g_str + '_post_trace.pdf')
         plot_traces(sizes, 'Number of Edges', 'results/vis/size_traces/' + b_str + '_' + g_str + '_size_trace.pdf')
         plot_traces(n_bases, 'Number of Bases', 'results/vis/basis_traces/' + b_str + '_' + g_str + '_basisct_trace.pdf')
@@ -66,6 +69,11 @@ def main():
         d['IAT_sizes'].append(IAC_time(sizes))
         d['IAT_bases'].append(IAC_time(n_bases))
 
+        d['accept_rate'].append(np.sum(sampler.res['ACCEPT_INDEX']) / len(sampler.res['ACCEPT_INDEX']))
+        d['max_posterior'].append(np.max(posts))
+        d['states_visited'].append(len(np.unique(sampler.res['SAMPLES'][burnin:])))
+
+
         # Accuracy Performance
         infile = 'data/graph_' + d['graph'][-1] + '.pkl'
         with open(infile, 'rb') as handle:
@@ -73,7 +81,7 @@ def main():
 
         assert(n == len(g))
 
-        median_g = str_list_to_median_graph(len(g), sampler.res['SAMPLES'][2500:], .5)
+        median_g = str_list_to_median_graph(len(g), sampler.res['SAMPLES'][burnin:], .5)
 
         TP, TN, FP, FN = get_accuracies(g, median_g)
 

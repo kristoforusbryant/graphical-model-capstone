@@ -8,6 +8,7 @@ from tests.test_utils.generate_data import generate_data_and_save
 
 import numpy as np
 import networkx as nx
+import pickle
 
 # Number of nodes and observations
 n, n_obs = 100, 1000
@@ -42,3 +43,12 @@ for i in range(len(graphs)):
     outfile = "data/" + graph_names[i] + '.dat'
     print('Generating ' + outfile + '...' )
     generate_data_and_save(n, n_obs, g, outfile, threshold=None, seed=123)
+
+# Saving graphs
+for i in range(len(graphs)):
+    g = graphs[i]
+    g.SetName(graph_names[i])
+    outfile = "data/graph_" + graph_names[i] + '.pkl'
+    print('Saving ' + outfile + '...' )
+    with open(outfile, 'wb') as handle:
+        pickle.dump(g, handle)

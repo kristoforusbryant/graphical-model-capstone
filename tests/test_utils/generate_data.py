@@ -28,6 +28,8 @@ def generate_data(n, m, g, seed=None, threshold=.5):
                                 try tweaking the threshold parameter.")
 
     assert(((np.abs(np.linalg.inv(C_star)) > 1e-10)[triu] == g.GetBinaryL()).all())
+    assert(np.allclose(C_star, C_star.transpose())) # symmetric
+    assert(np.linalg.det(C_star) > 0.) # positive definite
 
     data = np.random.multivariate_normal(np.zeros(n), C_star, m)
     return data

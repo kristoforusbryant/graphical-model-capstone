@@ -58,7 +58,7 @@ def main():
 
         # Mixing Performance
         burnin = 5000
-        posts = np.array(sampler.res['LIK'], dtype=float) + np.array(sampler.res['PRIOR'], dtype=float)[burnin:]
+        posts = np.array(sampler.res['LIK'], dtype=float)[burnin:] + np.array(sampler.res['PRIOR'], dtype=float)[burnin:]
         sizes = list(map(lambda s: np.sum(str_to_int_list(s)), sampler.res['SAMPLES']))[burnin:]
         n_bases = list(map(lambda s: np.sum(str_to_int_list(sampler.lookup[s]['BASIS_ID'])), sampler.res['SAMPLES']))[burnin:]
         plot_traces(posts, 'Log Posterior', 'results/vis/post_traces/' + b_str + '_' + g_str + '_post_trace.pdf')

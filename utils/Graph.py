@@ -33,10 +33,17 @@ class Graph: # undirected, unweigheted graph
         return self._name
 
     def GetID(self):
-        return ''.join(self.GetAdjM()[np.triu_indices(len(self), 1)].astype(str).tolist())
+        return ''.join(self.GetBinaryL().astype(str).tolist())
 
     def GetBinaryL(self):
-        return self.GetAdjM()[np.triu_indices(len(self), 1)]
+        n = len(self)
+        binl = np.zeros(n * (n - 1) // 2, dtype=int)
+        for i, l in self._dol.items():
+            for j in l:
+                if j < i: continue
+                linear_idx = (n*(n-1)//2) - (n-i)*((n-i)-1)//2 + j - i - 1
+                binl[linear_idx] = 1
+        return binl
 
     def GetEdgeL(self):
         EdgeL = []

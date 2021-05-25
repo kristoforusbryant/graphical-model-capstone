@@ -22,7 +22,7 @@ class BasisCount:
         if self._tree_prior:
             # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
             T_ = self._tree_prior.Sample()
-            param = self._Param(self._n, basis=cycle_basis(T_), tree=T_)
+            param = self._Param(self._n, tree=T_)
         else:
             param = self._Param(self._n, basis=self._basis)
 

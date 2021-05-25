@@ -3,9 +3,6 @@
 This script allows users to obtain MCMC samples from of a Gaussian Graphical Model efficiently
 by using the cycle basis prior.
 
-The script should be run as:
-`python cbmcmc.py --data observations.dat --outfile samples.pkl --it 10000`
-
 This script requires the packages `numpy`, and `pandas` to be
 installed within the Python environment you are running this script in.
 
@@ -34,7 +31,7 @@ import dists.TreePriors, dists.CountPriors
 import dists.Priors, dists.Likelihoods, dists.Proposals
 from dists.Params import GraphAndBasis
 
-def cbmcmc(data, outfile=None, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_freq=100, seed=123):
+def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_freq=100, outfile=None, seed=123):
     data = np.loadtxt(data, delimiter=",")
     _, n = data.shape
 
@@ -84,8 +81,8 @@ def main():
     # Parsing user-given inputs
     parser = Parser.Parser(sys.argv[1:]).args
 
-    cbmcmc(parser.data, parser.outfile, parser.it, parser.basis, parser.treeprior,
-           parser.r, parser.p, parser.cob_freq, parser.seed)
+    cbmcmc(parser.data, parser.it, parser.basis, parser.treeprior,
+           parser.r, parser.p, parser.cob_freq, parser.outfile, parser.seed)
 
     return 0
 

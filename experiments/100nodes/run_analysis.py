@@ -24,9 +24,8 @@ def get_accuracies(g, md):
 def plot_traces(a, title, outfile):
     fig = plt.figure(figsize=(20,10))
     plt.plot(a)
-    plt.title(title, fontsize=20)
+    plt.title(title, fontsize=30)
     plt.xlabel('Number of Iterations', fontsize=20)
-    plt.ylabel('Frequency', fontsize=20)
     fig.savefig(outfile)
     plt.close(fig)
     return 0

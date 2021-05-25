@@ -38,7 +38,7 @@ seed = 123
 # Edge
 def edge_runner(t):
     d, o = t
-    cbmcmc(d, o, it, 'edge')
+    cbmcmc(d, it, 'edge', outfile=o)
     return 0
 pool = Pool()
 pool.map(edge_runner, edgeIO)
@@ -46,7 +46,7 @@ pool.map(edge_runner, edgeIO)
 # All
 def all_runner(t):
     d, o = t
-    cbmcmc(d, o, it, 'cycle', 'all', r, p, cob_freq)
+    cbmcmc(d, it, 'cycle', 'all', r, p, cob_freq, outfile=o)
     return 0
 pool = Pool()
 pool.map(all_runner, allIO)
@@ -54,7 +54,7 @@ pool.map(all_runner, allIO)
 # Hub
 def hub_runner(t):
     d, o = t
-    cbmcmc(d, o, it, 'cycle', 'hub', r, p, cob_freq)
+    cbmcmc(d, o, it, 'cycle', 'hub', r, p, cob_freq, outfile=o)
     return 0
 pool = Pool()
 pool.map(hub_runner, hubIO)
@@ -62,7 +62,7 @@ pool.map(hub_runner, hubIO)
 # Path
 def path_runner(t):
     d, o = t
-    cbmcmc(d, o, it, 'cycle', 'path', r, p, cob_freq)
+    cbmcmc(d, o, it, 'cycle', 'path', r, p, cob_freq, outfile=o)
     return 0
 pool = Pool()
 pool.map(path_runner, pathIO)

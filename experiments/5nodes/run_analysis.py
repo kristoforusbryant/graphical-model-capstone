@@ -22,6 +22,8 @@ def get_accuracies(g, md):
     return TP, TN, FP, FN
 
 def plot_traces(a, title, outfile):
+    os.makedirs(os.path.dirname(outfile), exist_ok=True)
+
     fig = plt.figure(figsize=(20,10))
     plt.plot(a)
     plt.title(title, fontsize=30)
@@ -36,53 +38,64 @@ def str_to_int_list(s):
 def main():
     files = [s for s in os.listdir('results') if '.pkl' in s]
     l = ['basis', 'graph', 'n', 'iter', 'time',
+         'accept_rate', 'max_posterior', 'states_visited',
          'IAT_posterior', 'IAT_sizes', 'IAT_bases',
          'TP', 'TN', 'FP', 'FN']
     d = {k:[] for k in l}
+    burnin = [0, 2500, 5000]
 
-    for f in files:
-        with open('results/' + f, 'rb') as handle:
-            sampler = pickle.load(handle)
+    for b in burnin:
+        for f in files:
+            with open('results/' + f, 'rb') as handle:
+                sampler = pickle.load(handle)
 
-        # Information about the experiments
-        b_str, g_str = f.split('_')[:2]
-        n = int(os.getcwd().split('/')[-1].replace('nodes', ''))
-        d['basis'].append(b_str)
-        d['graph'].append(g_str)
-        d['n'].append(n)
-        d['iter'].append(sampler.iter)
-        d['time'].append(sampler.time)
+            # Information about the experiments
+            b_str, g_str = f.split('_')[:2] # basis and graph names
+            n = int(os.getcwd().split('/')[-1].replace('nodes', ''))
+            d['basis'].append(b_str)
+            d['graph'].append(g_str)
+            d['n'].append(n)
+            d['iter'].append(sampler.iter)
+            d['time'].append(sampler.time)
 
-        # Mixing Performance
-        posts = np.array(sampler.res['LIK'], dtype=float) + np.array(sampler.res['PRIOR'], dtype=float)
-        sizes = list(map(lambda s: np.sum(str_to_int_list(s)), sampler.res['SAMPLES']))
-        n_bases = list(map(lambda s: np.sum(str_to_int_list(sampler.lookup[s]['BASIS_ID'])), sampler.res['SAMPLES']))
-        plot_traces(posts, 'Log Posterior', 'results/vis/post_traces/' + b_str + '_' + g_str + '_post_trace.pdf')
-        plot_traces(sizes, 'Number of Edges', 'results/vis/size_traces/' + b_str + '_' + g_str + '_size_trace.pdf')
-        plot_traces(n_bases, 'Number of Bases', 'results/vis/basis_traces/' + b_str + '_' + g_str + '_basisct_trace.pdf')
 
-        d['IAT_posterior'].append(IAC_time(posts))
-        d['IAT_sizes'].append(IAC_time(sizes))
-        d['IAT_bases'].append(IAC_time(n_bases))
+            # Mixing Performance
+            posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
+            sizes = list(map(lambda s: np.sum(str_to_int_list(s)), sampler.res['SAMPLES']))[b:]
+            n_bases = list(map(lambda s: np.sum(str_to_int_list(sampler.lookup[s]['BASIS_ID'])), sampler.res['SAMPLES']))[b:]
 
-        # Accuracy Performance
-        infile = 'data/graph_' + d['graph'][-1] + '.pkl'
-        with open(infile, 'rb') as handle:
-            g = pickle.load(handle)
+            dirname = 'results/vis-burnin-' + str(b) + '/'
+            plot_traces(posts, 'Log Posterior', dirname + 'post_traces/' + b_str + '_' + g_str + '_post_trace.pdf')
+            plot_traces(sizes, 'Number of Edges', dirname + 'size_traces/' + b_str + '_' + g_str + '_size_trace.pdf')
+            plot_traces(n_bases, 'Number of Bases', dirname + 'basis_traces/' + b_str + '_' + g_str + '_basisct_trace.pdf')
 
-        assert(n == len(g))
+            d['IAT_posterior'].append(IAC_time(posts))
+            d['IAT_sizes'].append(IAC_time(sizes))
+            d['IAT_bases'].append(IAC_time(n_bases))
 
-        median_g = str_list_to_median_graph(len(g), sampler.res['SAMPLES'][2500:], .5)
+            d['accept_rate'].append(np.sum(sampler.res['ACCEPT_INDEX']) / len(sampler.res['ACCEPT_INDEX']))
+            d['max_posterior'].append(np.max(posts))
+            d['states_visited'].append(len(np.unique(sampler.res['SAMPLES'][b:])))
 
-        TP, TN, FP, FN = get_accuracies(g, median_g)
 
-        d['TP'].append(TP)
-        d['TN'].append(TN)
-        d['FP'].append(FP)
-        d['FN'].append(FN)
+            # Accuracy Performance
+            infile = 'data/graph_' + d['graph'][-1] + '.pkl'
+            with open(infile, 'rb') as handle:
+                g = pickle.load(handle)
 
-    df = pd.DataFrame(d)
-    df.to_csv('results/combined_summary.csv', index=False)
+            assert(n == len(g))
+
+            median_g = str_list_to_median_graph(len(g), sampler.res['SAMPLES'][b:], .5)
+
+            TP, TN, FP, FN = get_accuracies(g, median_g)
+
+            d['TP'].append(TP)
+            d['TN'].append(TN)
+            d['FP'].append(FP)
+            d['FN'].append(FN)
+
+        df = pd.DataFrame(d)
+        df.to_csv('results/combined_summary-burnin-' + str(b) + '.csv', index=False)
 
 if __name__ == "__main__":
     main()

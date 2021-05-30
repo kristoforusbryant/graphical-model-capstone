@@ -76,7 +76,7 @@ def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_fre
         import pickle
         with open(init, 'rb') as handle:
             g = pickle.load(handle)
-        sampler.run(it, fixed_init=handle)
+        sampler.run(it, fixed_init=g)
 
     # Saving Results
     if outfile is not None:

@@ -31,7 +31,7 @@ import dists.TreePriors, dists.CountPriors
 import dists.Priors, dists.Likelihoods, dists.Proposals
 from dists.Params import GraphAndBasis
 
-def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_freq=100, outfile=None, seed=123):
+def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_freq=100, outfile=None, seed=123, init=None):
     data = np.loadtxt(data, delimiter=",")
     _, n = data.shape
 
@@ -66,10 +66,17 @@ def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_fre
 
     # Run MCMC
     print("Starting MCMC...")
-    sampler = MCMC_Sampler(prior, prop, lik, data, outfile= outfile)
+    sampler = MCMC_Sampler(prior, prop, lik, data, outfile=outfile)
     if seed:
         np.random.seed(seed)
-    sampler.run(it)
+
+    if init is None:
+        sampler.run(it)
+    else:
+        import pickle
+        with open(init, 'rb') as handle:
+            g = pickle.load(handle)
+        sampler.run(it, fixed_init=handle)
 
     # Saving Results
     if outfile is not None:

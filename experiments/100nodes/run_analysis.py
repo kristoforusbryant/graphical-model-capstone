@@ -41,10 +41,10 @@ def main():
          'accept_rate', 'max_posterior', 'states_visited',
          'IAT_posterior', 'IAT_sizes', 'IAT_bases',
          'TP', 'TN', 'FP', 'FN']
-    d = {k:[] for k in l}
     burnin = [0, 500, 15000]
 
     for b in burnin:
+        d = {k:[] for k in l}
         for f in files:
             with open('results/' + f, 'rb') as handle:
                 sampler = pickle.load(handle)

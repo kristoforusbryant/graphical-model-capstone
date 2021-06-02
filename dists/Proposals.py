@@ -23,16 +23,16 @@ class BasisWalk:
                 param_ = param
 
                 # move once
-                i = np.random.choice(range(param_._basis.shape[1]))
-                param_.BinAddOneBasis(i)
+                # i = np.random.choice(range(param_._basis.shape[1]))
+                # param_.BinAddOneBasis(i)
 
                 # change basis
                 T_ = self._tree_prior.Sample()
                 param_ = change_basis(param_, T_)
 
                 # move again
-                i = np.random.choice(range(param_._basis.shape[1]))
-                param_.BinAddOneBasis(i)
+                # i = np.random.choice(range(param_._basis.shape[1]))
+                # param_.BinAddOneBasis(i)
             else:
                 param_ = param
 

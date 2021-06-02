@@ -3,7 +3,7 @@ import pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.diagnostics import IAC_time, str_list_to_median_graph
+from utils.diagnostics import IAC_time, str_list_to_adjm
 
 def get_accuracies(g, md):
     l1= np.array(g.GetBinaryL(), dtype=bool)
@@ -41,10 +41,10 @@ def main():
          'accept_rate', 'max_posterior', 'states_visited',
          'IAT_posterior', 'IAT_sizes', 'IAT_bases',
          'TP', 'TN', 'FP', 'FN']
-    d = {k:[] for k in l}
     burnin = [0, 2500, 5000]
 
     for b in burnin:
+        d = {k:[] for k in l}
         for f in files:
             with open('results/' + f, 'rb') as handle:
                 sampler = pickle.load(handle)
@@ -85,7 +85,11 @@ def main():
 
             assert(n == len(g))
 
-            median_g = str_list_to_median_graph(len(g), sampler.res['SAMPLES'][b:], .5)
+            adjm = str_list_to_adjm(len(g), sampler.res['SAMPLES'][b:])
+            with open(dirname + b_str  + '_' + g_str + '_adjm.pkl', 'wb') as handle:
+                pickle.dump(adjm, handle)
+
+            median_g = (adjm > .5).astype(int)
 
             TP, TN, FP, FN = get_accuracies(g, median_g)
 

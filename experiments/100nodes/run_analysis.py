@@ -38,13 +38,13 @@ def str_to_int_list(s):
 def main():
     files = [s for s in os.listdir('results') if '.pkl' in s]
     l = ['basis', 'graph', 'n', 'iter', 'time',
-         'accept_rate', 'max_posterior', 'states_visited',
+         'accept_rate', 'tree_accept_count', 'max_posterior', 'states_visited',
          'IAT_posterior', 'IAT_sizes', 'IAT_bases',
          'TP', 'TN', 'FP', 'FN']
-    d = {k:[] for k in l}
-    burnin = [0, 5000, 15000]
+    burnin = [0] #[0, 5000, 15000]
 
     for b in burnin:
+        d = {k:[] for k in l}
         for f in files:
             with open('results/' + f, 'rb') as handle:
                 sampler = pickle.load(handle)
@@ -74,6 +74,7 @@ def main():
             d['IAT_bases'].append(IAC_time(n_bases))
 
             d['accept_rate'].append(np.sum(sampler.res['ACCEPT_INDEX']) / len(sampler.res['ACCEPT_INDEX']))
+            d['tree_accept_count'].append(len(np.unique([sampler.lookup[s]['TREE_ID'] for s in sampler.res['SAMPLES']])))
             d['max_posterior'].append(np.max(posts))
             d['states_visited'].append(len(np.unique(sampler.res['SAMPLES'][b:])))
 

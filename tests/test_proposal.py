@@ -1,7 +1,7 @@
 from dists.Priors import BasisCount
 from dists.Params import GraphAndBasis
 from dists.CountPriors import TruncatedNB
-from dists.TreePriors import Uniform
+from dists.TreePriors import Uniform, Hubs
 from dists.Proposals import BasisWalk
 from utils.Graph import Graph
 import numpy as np
@@ -14,7 +14,7 @@ def g_is_sum_of_basis(g):
     sob = np.sum(g._basis.transpose()[np.where(g._basis_active)], axis = 0)
     return (sob == g.GetBinaryL()).all()
 
-def one_edge_difference(g, g_):
+def one_basis_difference(g, g_):
     x = np.sum(np.array(g._basis_active).astype(int) -
                np.array(g_._basis_active).astype(int))
     return (np.abs(x) == 1)
@@ -29,13 +29,28 @@ def test_proposal_Sample_no_COB():
         g = prior.Sample()
         g_ = prop.Sample(g.copy())
 
-        print(prop._temp)
         assert(isinstance(prop._temp, np.integer))
         assert(g._tree == g_._tree)
-        assert(one_edge_difference(g, g_))
+        assert(one_basis_difference(g, g_))
         assert(in_cycle_space(g_))
         assert(g_is_sum_of_basis(g_))
 
+def test_proposal_Sample_no_COB_hubs():
+    n = 10
+    ct_prior = TruncatedNB(n, .75)
+    prior = BasisCount(n, GraphAndBasis, ct_prior, Hubs(n))
+    prop = BasisWalk(n, GraphAndBasis, Hubs(n))
+    np.random.seed(123)
+    for _ in range(50):
+        g = prior.Sample()
+        g_ = prop.Sample(g.copy())
+
+        assert(isinstance(prop._temp, np.integer))
+        assert(g._tree == g_._tree)
+        assert(one_basis_difference(g, g_))
+        assert(in_cycle_space(g_))
+        assert(g_is_sum_of_basis(g_))
+        assert(len(set(g.GetEdgeL()).symmetric_difference(set(g_.GetEdgeL()))) == 3)
 
 def test_proposal_Sample_with_COB():
     n = 10
@@ -58,7 +73,7 @@ def test_proposal_Sample_with_COB():
             g_ = prop.Sample(g.copy())
             assert(isinstance(prop._temp, np.integer))
             assert(g._tree == g_._tree)
-            assert(one_edge_difference(g, g_))
+            assert(one_basis_difference(g, g_))
             assert(in_cycle_space(g_))
             assert(g_is_sum_of_basis(g_))
             g = g_

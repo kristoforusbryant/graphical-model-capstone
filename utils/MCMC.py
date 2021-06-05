@@ -12,6 +12,7 @@ class MCMC_Sampler:
         self.res = {'SAMPLES':[], # ID
                     'ALPHAS':[],
                     'PARAMS':[], # ID
+                    'PARAMS_PROPS': [],
                     'ACCEPT_INDEX':[],
                     'LIK':[],
                     'PRIOR':[],
@@ -38,38 +39,35 @@ class MCMC_Sampler:
         lik_p = self.lik.PDF(params)
         prior_p = self.prior.PDF(params)
 
-        basis_id_p = ''.join(np.array(params._basis_active, dtype=str))
-        if params._tree:
-            tree_id_p = params._tree.GetID()
-        else:
-            tree_id_p = ''
-        self.lookup[id_p] = {'LIK': lik_p, 'PRIOR': prior_p,
-                               'BASIS_ID': basis_id_p, 'TREE_ID': tree_id_p}
+        self.lookup[id_p] = {'LIK': lik_p}
 
         print(params)
         print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
 
         # Iterate
         for i in tqdm(range(it)):
+            assert(self.prop.counter == i)
             params_ = self.prop.Sample(params)
 
             id_p_ = params_.GetID()
             self.res['PARAMS'].append(id_p_)
-            # Fetch if memoised
+            # Fetch likelihood if memoised
             if id_p_ in self.lookup.keys():
                 lik_p_ = self.lookup[id_p_]['LIK']
-                prior_p_ = self.lookup[id_p_]['PRIOR']
             else:
                 lik_p_ = self.lik.PDF(params_)
-                prior_p_ = self.prior.PDF(params_)
-                basis_id_p_ = ''.join(np.array(params_._basis_active, dtype=str))
-                if params_._tree:
-                    tree_id_p_ = params_._tree.GetID()
-                else:
-                    tree_id_p_ = ''
+                self.lookup[id_p_] = {'LIK': lik_p_}
 
-                self.lookup[id_p_] = {'LIK': lik_p_, 'PRIOR': prior_p_,
-                                    'BASIS_ID': basis_id_p_, 'TREE_ID': tree_id_p_}
+            prior_p_ = self.prior.PDF(params_)
+            basis_id_p_ = ''.join(np.array(params_._basis_active, dtype=str))
+
+            if params_._tree and (self.prop._skip is not None):
+                if (self.prop.counter - 1) % self.prop._skip == 0:
+                    tree_id_p_ = params_._tree.GetID()
+            else:
+                tree_id_p_ = ''
+
+            self.res['PARAMS_PROPS'].append({'PRIOR': prior_p_, 'BASIS_ID': basis_id_p_, 'TREE_ID': tree_id_p_})
 
             self.res['LIK_'].append(lik_p_)
             self.res['PRIOR_'].append(prior_p_)

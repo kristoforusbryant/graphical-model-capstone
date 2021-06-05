@@ -28,6 +28,8 @@ class BasisWalk:
 
                 # change basis
                 T_ = self._tree_prior.Sample()
+                while param._tree == T_:
+                    T_ = self._tree_prior.Sample()
                 param_ = change_basis(param_, T_)
 
                 # move again

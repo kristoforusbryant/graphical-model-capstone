@@ -1,7 +1,7 @@
 from utils.MCMC import MCMC_Sampler
 import dists.TreePriors, dists.CountPriors
 import dists.Priors, dists.Likelihoods, dists.Proposals
-from dists.Params import GraphAndBasis
+from dists.Params import GraphAndBasis, Graph
 from utils.generate_basis import circle_graph, edge_basis
 from tests.test_utils.generate_data import generate_data
 import numpy as np
@@ -26,13 +26,16 @@ def only_propose_one_edge_difference(sampler):
         False
     return True
 
-def lookup_types_are_correct(n, lookup):
+def sampler_types_are_correct(n, sampler):
     try:
-        for k, l in lookup.items():
+        for k, l in sampler.lookup.items():
             assert(len(k) == n * (n - 1) // 2)
-            assert(isinstance(l['LIK'], float) and isinstance(l['PRIOR'], float))
-            assert(len(l['BASIS_ID']) == (n - 1) * (n - 2) //2
-                    and len(l['TREE_ID']) == n * (n - 1) // 2)
+            assert(isinstance(l['LIK'], float))
+
+        for i in range(sampler.iter):
+            assert(isinstance(sampler.res['PARAMS_PROPS'][i]['PRIOR'], float))
+            assert(len(sampler.res['PARAMS_PROPS'][i]['BASIS_ID']) == (n - 1) * (n - 2) //2)
+            assert(len(sampler.res['PARAMS_PROPS'][i]['TREE_ID']) == n * (n - 1) // 2)
     except AssertionError:
         False
     return True
@@ -123,8 +126,13 @@ def only_propose_one_basis_difference(sampler, skip):
     try:
         for i in range(len(sampler.res['SAMPLES'])):
             if i % skip != 0:
-                b_str1 = sampler.lookup[sampler.res['SAMPLES'][i]]['BASIS_ID']
-                b_str2 = sampler.lookup[sampler.res['PARAMS'][i]]['BASIS_ID']
+                accepted_indexes = np.where(sampler.res['ACCEPT_INDEX'][:i + 1])[0]
+                if len(accepted_indexes) > 0:
+                    last_accepted_idx = np.max(accepted_indexes)
+                else:
+                    continue
+                b_str1 = sampler.res['PARAMS_PROPS'][last_accepted_idx]['BASIS_ID']
+                b_str2 = sampler.res['PARAMS_PROPS'][i]['BASIS_ID']
                 a = np.array(list(b_str1)).astype(int)
                 b = np.array(list(b_str2)).astype(int)
                 diff = np.sum(np.abs(a - b))
@@ -203,6 +211,80 @@ def test_MCMC_cb_1():
 
         assert(only_propose_one_basis_difference(sampler, cob_freq))
         assert(lookup_contains_all_params(sampler))
-        assert(lookup_types_are_correct(n, sampler.lookup))
+        assert(sampler_types_are_correct(n, sampler))
         assert(if_not_similar_then_median_has_larger_lik(g, median_graph, sampler))
+
+def tree_changes_only_every_k_iter(sampler, k):
+    trees = [pp['TREE_ID'] for pp in sampler.res['PARAMS_PROPS']]
+    tree_change = (np.where(list(map(lambda t, t_: t != t_, trees[:-1], trees[1:])))[0] + 1)
+    try:
+        for i in tree_change:
+            assert(i % k == 0 or (i - 1) %k == 0)
+    except AssertionError:
+        return False
+    return True
+
+def if_both_empty_or_complete_cob_always_happen(sampler, k):
+    t = len(sampler.res['SAMPLES'])
+    trees = [pp['TREE_ID'] for pp in sampler.res['PARAMS_PROPS']]
+    empty = '0' * len(sampler.res['SAMPLES'][0])
+    complete = '1' * len(sampler.res['SAMPLES'][0])
+    ct = k - 1
+    while ct < t - 1:
+        if (sampler.res['SAMPLES'][ct] == empty) or (sampler.res['SAMPLES'][ct] == complete):
+            try:
+                assert(sampler.res['ALPHAS'][ct + 1] == 0)
+                assert(sampler.res['ACCEPT_INDEX'][ct + 1])
+                assert(trees[ct] != trees[ct + 1])
+            except AssertionError:
+                return False
+            ct += k
+    return True
+
+def test_proposal_COB_empty():
+    n, n_obs = (5, 500)
+    tree_prior = dists.TreePriors.Hubs(n)
+    ct_prior = dists.CountPriors.TruncatedNB(1, .5)
+    cob_freq = 10
+
+    prior = dists.Priors.BasisCount(n, GraphAndBasis, ct_prior, tree_prior)
+    temp = Graph(5)
+    g = GraphAndBasis(5, temp._dol, tree=tree_prior.Sample(), basis=np.ones((n-1) * (n-2) // 2, dtype=bool))
+    data = generate_data(n, n_obs, g, seed=123)
+    lik = dists.Likelihoods.Delta(g.copy())
+    prop = dists.Proposals.BasisWalk(n, GraphAndBasis, tree_prior, skip=cob_freq)
+
+    np.random.seed(123)
+    sampler = MCMC_Sampler(prior, prop, lik, data)
+    sampler.run(5000, g)
+
+    assert(tree_changes_only_every_k_iter(sampler, cob_freq))
+    assert(if_both_empty_or_complete_cob_always_happen(sampler, cob_freq))
+    assert(only_propose_one_basis_difference(sampler, cob_freq))
+    assert(lookup_contains_all_params(sampler))
+    assert(sampler_types_are_correct(n, sampler))
+
+def test_proposal_COB_complete():
+    n, n_obs = (5, 500)
+    tree_prior = dists.TreePriors.Hubs(n)
+    ct_prior = dists.CountPriors.TruncatedNB(1, .5)
+    cob_freq = 10
+
+    prior = dists.Priors.BasisCount(n, GraphAndBasis, ct_prior, tree_prior)
+    temp = Graph(5)
+    temp.SetComplete()
+    g = GraphAndBasis(5, temp._dol, tree=tree_prior.Sample(), basis=np.ones((n-1) * (n-2) // 2, dtype=bool))
+    data = generate_data(n, n_obs, g, seed=123)
+    lik = dists.Likelihoods.Delta(g.copy())
+    prop = dists.Proposals.BasisWalk(n, GraphAndBasis, tree_prior, skip=cob_freq)
+
+    np.random.seed(123)
+    sampler = MCMC_Sampler(prior, prop, lik, data)
+    sampler.run(5000, g)
+
+    assert(tree_changes_only_every_k_iter(sampler, cob_freq))
+    assert(if_both_empty_or_complete_cob_always_happen(sampler, cob_freq))
+    assert(only_propose_one_basis_difference(sampler, cob_freq))
+    assert(lookup_contains_all_params(sampler))
+    assert(sampler_types_are_correct(n, sampler))
 

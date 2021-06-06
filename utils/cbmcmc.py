@@ -76,6 +76,8 @@ def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_fre
         import pickle
         with open(init, 'rb') as handle:
             g = pickle.load(handle)
+        if g._tree is None and tree_prior is not None:
+            g._tree = tree_prior.Sample()
         sampler.run(it, fixed_init=g)
 
     # Saving Results

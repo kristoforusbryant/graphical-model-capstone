@@ -1,7 +1,7 @@
 from utils.Graph import Graph
 import numpy as np
 import copy
-from utils.generate_basis import edge_basis, cycle_basis
+from utils.generate_basis import cycle_basis_complete, edge_basis, cycle_basis
 import galois
 GF2 = galois.GF(2)
 
@@ -12,12 +12,16 @@ class GraphAndBasis(Graph):
         self._tree = tree
         # basis is n_edges x n_basis array
         if tree:
-            self._basis = cycle_basis(tree)
+            cbc = cycle_basis_complete(tree)
+            self._basis = cbc[:,:(n - 1) * (n - 2) // 2]
+            self._basis_active = np.linalg.solve(cbc, GF2(self.GetBinaryL()))[:(n - 1) * (n - 2) // 2]
         elif basis is not None:
+            assert(basis.shape == (n * (n - 1) // 2, n * (n - 1) // 2))
             self._basis = basis
+            self._basis_active = np.linalg.solve(self._basis, GF2(self.GetBinaryL()))
         else:
             self._basis = edge_basis(n)
-        self._basis_active = GF2(np.zeros(self._basis.shape[1], dtype=int))
+            self._basis_active = np.linalg.solve(self._basis, GF2(self.GetBinaryL()))
 
     def GetBasis(self):
         return self._basis

@@ -52,3 +52,16 @@ class GW_LA:
 
     def ParamType(self):
         return self._Param.__name__
+
+class Delta:
+    def __init__(self, param):
+        self.param = param
+
+    def PDF(self, param_):
+        if self.param == param_:
+            return 0
+        else:
+            return -np.inf
+
+    def ParamType(self):
+        return self.param.__class__

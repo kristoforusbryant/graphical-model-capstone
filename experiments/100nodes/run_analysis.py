@@ -42,7 +42,7 @@ def main():
          'IAT_posterior', 'IAT_sizes', 'IAT_bases',
          'TP', 'TN', 'FP', 'FN']
 
-    burnin = [0, 500, 15000]
+    burnin = [0, 5000, 15000]
 
     for b in burnin:
         d = {k:[] for k in l}

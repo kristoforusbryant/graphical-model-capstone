@@ -167,7 +167,7 @@ class MCMC_Summarizer():
 
                 # Information about the experiments
                 b_str, g_str = f.split('_')[:2] # basis and graph names
-                n = int(os.getcwd().split('/')[-1].replace('nodes', ''))
+                n = int("".join(filter(str.isdigit, os.getcwd().split('/')[-1])))
                 d['basis'].append(b_str)
                 d['graph'].append(g_str)
                 d['n'].append(n)

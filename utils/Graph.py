@@ -205,6 +205,12 @@ class Graph: # undirected, unweigheted graph
         return True
     IsComplete = IsClique
 
+    def IsInCycleSpace(self):
+        for _, v in self._dol.items():
+            if len(v) % 2 != 0:
+                return False
+        return True
+
     # Search Algorithms
     def DFS(self, v, key, visited):
         self.DFSUtil(v, visited)

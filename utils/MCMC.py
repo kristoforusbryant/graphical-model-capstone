@@ -25,6 +25,7 @@ class MCMC_Sampler:
         self.iter = 0
         self.outfile = outfile
         self.last_params = None
+        self.init = None
 
     def run(self, it=7500, fixed_init=None):
         tic = time.time()
@@ -40,6 +41,12 @@ class MCMC_Sampler:
         prior_p = self.prior.PDF(params)
 
         self.lookup[id_p] = {'LIK': lik_p}
+        if params._tree and (self.prop._skip is not None):
+            tree_id_p = params._tree.GetID()
+        else:
+            tree_id_p = ''
+        self.init  = {'SAMPLE': id_p, 'LIK': lik_p, 'PRIOR': prior_p,
+                      'BASIS_ID': ''.join(np.array(params._basis_active, dtype=str)), 'TREE_ID': tree_id_p}
 
         print(params)
         print("loglik: " + str(lik_p) + ", logprior: " + str(prior_p))
@@ -153,6 +160,20 @@ class MCMC_Summarizer():
     def _str_to_int_list(self, s):
         return np.array(list(s), dtype=int)
 
+    def _get_basis_ct(self, sampler):
+        basis_ct = []
+        if sampler.res['ACCEPT_INDEX'][0] == 0:
+            basis_ct.append(np.sum(self._str_to_int_list(sampler.init['BASIS_ID'])))
+        else:
+            basis_ct.append(np.sum(self._str_to_int_list(sampler.res['PARAMS_PROPS'][0]['BASIS_ID'])))
+
+        for i in range(1, len(sampler.res['ACCEPT_INDEX'])):
+            if sampler.res['ACCEPT_INDEX'][i]:
+                basis_ct.append(np.sum(self._str_to_int_list(sampler.res['PARAMS_PROPS'][i]['BASIS_ID'])))
+            else:
+                basis_ct.append(basis_ct[-1])
+        return basis_ct
+
     def summarize(self):
         l = ['basis', 'graph', 'n', 'iter', 'time',
             'accept_rate', 'tree_accept_ct', 'max_posterior', 'states_visited',
@@ -178,7 +199,7 @@ class MCMC_Summarizer():
                 # Mixing Performance
                 posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
                 sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b:]
-                n_bases = list(map(lambda pp: np.sum(self._str_to_int_list(pp['BASIS_ID'])), sampler.res['PARAMS_PROPS']))[b:]
+                n_bases = self._get_basis_ct(sampler)[b:]
                 trees = [pp['TREE_ID'] for pp in sampler.res['PARAMS_PROPS']]
                 change_tree = np.where(list(map(lambda t, t_: t != t_, trees[:-1], trees[1:])))[0] + 1
 

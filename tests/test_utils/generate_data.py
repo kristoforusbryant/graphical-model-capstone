@@ -27,7 +27,7 @@ def generate_data(n, m, g, seed=None, threshold=.5):
                 raise ValueError("Can't find precision matrix with large enough non-zero values, \
                                 try tweaking the threshold parameter.")
 
-    assert(((np.abs(np.linalg.inv(C_star)) > 1e-10)[triu] == g.GetBinaryL()).all())
+    assert(((np.abs(np.linalg.inv(C_star)) > 1e-10)[triu] == g.GetBinaryL()).all()) # zeros at the right places
     assert(np.allclose(C_star, C_star.transpose())) # symmetric
     assert(np.linalg.det(C_star) > 0.) # positive definite
 

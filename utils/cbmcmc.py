@@ -31,7 +31,7 @@ import dists.TreePriors, dists.CountPriors
 import dists.Priors, dists.Likelihoods, dists.Proposals
 from dists.Params import GraphAndBasis
 
-def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=None, p=.75, cob_freq=100, outfile=None, seed=123, init=None):
+def cbmcmc(data, it=1000, basis='cycle', treeprior='all', r=1, p=.5, cob_freq=100, outfile=None, seed=123, init=None):
     data = np.loadtxt(data, delimiter=",")
     _, n = data.shape
 

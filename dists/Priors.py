@@ -20,7 +20,7 @@ class BasisCount:
 
     def Sample(self):
         if self._tree_prior:
-            # Sample tree that generates a new basis (assume T is uniform, hence does not affect proposal)
+            # Sample tree that generates a new basis (assume T is uniform)
             T_ = self._tree_prior.Sample()
             param = self._Param(self._n, tree=T_)
         else:
@@ -40,6 +40,43 @@ class BasisCount:
 
     def PDF(self, param):
         return np.log(self._prob_c(np.sum(np.array(param._basis_active, dtype=int))))
+
+    def ParamType(self):
+        return self._Param.__name__
+
+class BasisInclusion:
+    def __init__(self, n, Param, alpha=.5, tree_prior=None, basis=None):
+        # alpha: probability of inclusion
+        self._n = n
+        self._Param = Param
+        self._alpha = alpha
+        if tree_prior:
+            self._tree_prior = tree_prior
+        elif basis is not None:
+            self._basis = basis
+            self._tree_prior = None
+        else:
+            self._basis = edge_basis(n)
+            self._tree_prior = None
+
+    __name__ = 'basis_inclusion_prob'
+
+    def Sample(self):
+        if self._tree_prior:
+            # Sample tree that generates a new basis (assume T is uniform)
+            T_ = self._tree_prior.Sample()
+            param = self._Param(self._n, tree=T_)
+        else:
+            param = self._Param(self._n, basis=self._basis)
+
+        idx = np.where(np.random.random(param._basis.shape[1]) < self._alpha)[0]
+        param.BinAddBasis(idx)
+
+        return param
+
+    def PDF(self, param):
+        n_active = np.sum(np.array(param._basis_active, dtype=int))
+        return np.log(self._alpha) * n_active + np.log(1 - self._alpha) * (len(param._basis_active) - n_active)
 
     def ParamType(self):
         return self._Param.__name__

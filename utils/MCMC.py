@@ -67,14 +67,14 @@ class MCMC_Sampler:
             else:
                 tree_id_p_ = ''
 
-            self.res['PARAMS_PROPS'].append({'PRIOR': prior_p_, 'BASIS_ID': basis_id_p_, 'TREE_ID': tree_id_p_})
-
-            self.res['LIK_'].append(lik_p_)
-            self.res['PRIOR_'].append(prior_p_)
-
             lik_r = lik_p_ - lik_p
             prior_r = prior_p_ - prior_p
-            alpha = lik_r + prior_r
+            prop_r = self.prop.PDF_ratio(params_)
+            alpha = lik_r + prior_r + prop_r
+
+            self.res['PARAMS_PROPS'].append({'PRIOR': prior_p_, 'BASIS_ID': basis_id_p_, 'TREE_ID': tree_id_p_, 'PROP_RATIO': prop_r})
+            self.res['LIK_'].append(lik_p_)
+            self.res['PRIOR_'].append(prior_p_)
 
             self.res['ALPHAS'].append(alpha)
             if np.log(np.random.uniform()) < alpha:

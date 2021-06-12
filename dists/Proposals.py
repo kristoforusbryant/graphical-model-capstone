@@ -11,7 +11,7 @@ class BasisWalk:
         self._skip = skip
         self._temp = None # to store (part of) previous parameter
 
-    __name__ = 'basis_size_with_tree_prior'
+    __name__ = 'basis_size_with_tree_moves'
 
     def Sample(self, param):
         # When basis can change
@@ -22,19 +22,12 @@ class BasisWalk:
 
                 param_ = param
 
-                # move once
-                # i = np.random.choice(range(param_._basis.shape[1]))
-                # param_.BinAddOneBasis(i)
-
                 # change basis
                 T_ = self._tree_prior.Sample()
                 while param._tree == T_:
                     T_ = self._tree_prior.Sample()
                 param_ = change_basis(param_, T_)
 
-                # move again
-                # i = np.random.choice(range(param_._basis.shape[1]))
-                # param_.BinAddOneBasis(i)
             else:
                 param_ = param
 
@@ -63,6 +56,137 @@ class BasisWalk:
             return p_
         else:
             return self._temp
+
+    def PDF_ratio(self, p_):
+        return 0
+
+    def PDF(self, p, p_):
+        return 0
+
+    def ParamType(self):
+        return self._Param.__name__
+
+
+class BasisBD:
+    def __init__(self, n, Param, tree_prior=None, skip=None, alpha=.5):
+        # rv_size: distribution of the basis size
+        self._n = n
+        self._Param = Param
+        self._tree_prior = tree_prior
+        self.counter = 0
+        self._skip = skip
+        self._temp = None # to store (part of) previous parameter
+        self._alpha = alpha # probability of birth
+
+    __name__ = 'basis_BD_with_tree_moves'
+
+    def Sample(self, param):
+        # When basis can change
+        if self._skip is not None:
+            if self.counter % self._skip == 0:
+                # too much of a hassle to revert by adding bases, just add the entire object
+                self._temp = param.copy()
+
+                param_ = param
+
+                # change basis
+                T_ = self._tree_prior.Sample()
+                while param._tree == T_:
+                    T_ = self._tree_prior.Sample()
+                param_ = change_basis(param_, T_)
+
+            else:
+                param_ = param
+                if np.sum(param_._basis_active == 1) == 0: # empty, hence birth
+                    idx = np.where(param_._basis_active == 0)[0]
+                    i = np.random.choice(idx)
+                    param_.BinAddOneBasis(i)
+                    self._temp = i
+                elif np.sum(param_._basis_active == 0) == 0: # complete, hence death
+                    idx = np.where(param_._basis_active == 1)[0]
+                    i = np.random.choice(idx)
+                    param_.BinAddOneBasis(i)
+                    self._temp = i
+                elif np.random.random() < self._alpha : # birth
+                    idx = np.where(param_._basis_active == 0)[0]
+                    i = np.random.choice(idx)
+                    param_.BinAddOneBasis(i)
+                    self._temp = i
+                else: # death
+                    idx = np.where(param_._basis_active == 1)[0]
+                    i = np.random.choice(idx)
+                    param_.BinAddOneBasis(i)
+                    self._temp = i
+
+        # When basis stays constant
+        else:
+            param_ = param
+            if np.sum(param_._basis_active == 1) == 0: # empty, hence birth
+                idx = np.where(param_._basis_active == 0)[0]
+                i = np.random.choice(idx)
+                param_.BinAddOneBasis(i)
+                self._temp = i
+            elif np.sum(param_._basis_active == 0) == 0: # complete, hence death
+                idx = np.where(param_._basis_active == 1)[0]
+                i = np.random.choice(idx)
+                param_.BinAddOneBasis(i)
+                self._temp = i
+            elif np.random.random() < self._alpha : # birth
+                idx = np.where(param_._basis_active == 0)[0]
+                i = np.random.choice(idx)
+                param_.BinAddOneBasis(i)
+                self._temp = i
+            else: # death
+                idx = np.where(param_._basis_active == 1)[0]
+                i = np.random.choice(idx)
+                param_.BinAddOneBasis(i)
+                self._temp = i
+
+        self.counter += 1
+
+        return param_
+
+    def Revert(self,p_):
+        if self._skip is None:
+            p_.BinAddOneBasis(self._temp)
+            return p_
+        elif (self.counter - 1) % self._skip != 0:
+            p_.BinAddOneBasis(self._temp)
+            return p_
+        else:
+            return self._temp
+
+    def PDF_ratio(self, p_): # q(p_ -> p) / q(p -> p_)
+        if self._skip is None:
+            n_active_ = np.sum(np.array(p_._basis_active, dtype=int))
+            if n_active_ == 0: # empty, hence p_ must be the result of death
+                n_active = n_active_ + 1
+                return np.log(1) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
+            elif n_active_ == len(p_._basis_active): # complete, hence p_ must be the result of birth
+                n_active = n_active_ - 1
+                return np.log(1) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
+            elif self._temp in np.where(p_._basis_active == 1)[0]: # p_ is result of birth, therefore p_ -> p is a death process
+                n_active = n_active_ - 1
+                return np.log(1 - self._alpha) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
+            else: # p_ is result of death, therefore p_ -> p is a birth process
+                n_active = n_active_ + 1
+                return np.log(self._alpha) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
+        elif (self.counter - 1) % self._skip != 0:
+            n_active_ = np.sum(np.array(p_._basis_active, dtype=int))
+            if n_active_ == 0: # p_ must be the result of death
+                n_active = n_active_ + 1
+                return np.log(1) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
+            elif n_active_ == len(p_._basis_active): # p_ must be the result of birth
+                n_active = n_active_ - 1
+                return np.log(1) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
+            elif self._temp in np.where(p_._basis_active == 1)[0]: # p_ is result of birth, therefore p_ -> p is a death process
+                n_active = n_active_ - 1
+                return np.log(1 - self._alpha) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
+            else: # p_ is result of death, therefore p_ -> p is a birth process
+                n_active = n_active_ + 1
+                return np.log(self._alpha) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
+        else:
+            return 0
 
     def PDF(self, p, p_):
         return 0

@@ -8,7 +8,7 @@ def generate_data(n, m, g, seed=None, threshold=.5):
     if seed is not None:
         np.random.seed(seed)
 
-    T = np.random.random((n,n))
+    T = np.random.random((3 + n, n))
     C = T.transpose() @ T
     C_star = constrained_cov(g.GetDOL(), C, np.eye(n)) # constrain zeroes of the matrices
     K = np.linalg.inv(C_star)
@@ -17,7 +17,7 @@ def generate_data(n, m, g, seed=None, threshold=.5):
     if threshold:
         count = 0
         while not ((np.abs(K[triu]) > threshold).astype(int) == g.GetBinaryL()).all():
-            T = np.random.random((n,n))
+            T = np.random.random((3 + n, n))
             C = T.transpose() @ T
             C_star = constrained_cov(g.GetDOL(), C, np.eye(n)) # constrain zeroes of the matrices
             K = np.linalg.inv(C_star)

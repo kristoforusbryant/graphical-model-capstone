@@ -27,7 +27,7 @@ class MCMC_Sampler:
         self.last_params = None
         self.init = None
 
-    def run(self, it=7500, fixed_init=None):
+    def run(self, it=10000, fixed_init=None):
         tic = time.time()
 
         # Initialisation

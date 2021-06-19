@@ -18,7 +18,7 @@ DEFAULT_CONFIG =  OrderedDict({ 'n': 5,
 
 ALL_CONFIGS = OrderedDict({ 'n': [5],
                 'n_obs': [250],
-                'init': ['fixed', 'empty'],
+                'init': ['fixed', 'empty', 'complete', 'circle'],
                 'true_graph': 'empty',
                 'prior': ['basis-inclusion', 'basis-count'],
                 'basis': ['edge', 'hub'],
@@ -56,6 +56,12 @@ def parse_init(conf):
             return pickle.load(handle)
     elif conf['init'] == 'empty':
         with open(f'data/graph_empty_{n}_{n_obs}.pkl', 'rb') as handle:
+            return pickle.load(handle)
+    elif conf['init'] == 'complete':
+        with open(f'data/graph_complete_{n}_{n_obs}.pkl', 'rb') as handle:
+            return pickle.load(handle)
+    elif conf['init'] == 'circle':
+        with open(f'data/graph_circle_{n}_{n_obs}.pkl', 'rb') as handle:
             return pickle.load(handle)
     else:
         raise ValueError(f"Unrecognized value of conf['init']: {conf['init']}")
@@ -111,7 +117,9 @@ def parse_config(conf, Param):
     prior = parse_prior(conf, Param)
     prop = parse_proposal(conf, Param)
 
-    if conf['basis'] != 'edge':
+    if conf['basis'] == 'edge':
+        init = Param(len(init), init._dol)
+    else:
         init = Param(len(init), init._dol, tree = prior._tree_prior.Sample())
 
     iter = conf['iter']

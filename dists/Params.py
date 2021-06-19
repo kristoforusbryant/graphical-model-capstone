@@ -49,6 +49,12 @@ class GraphAndBasis(Graph):
         for i in idx_l:
             self.BinAddOneBasis(i)
 
+    def GetBasisNeighbours(self):
+        l = [self.copy() for i in range(self._basis.shape[1])]
+        for i in range(self._basis.shape[1]):
+            l[i].BinAddOneBasis(i)
+        return l
+
     def __repr__(self):
         return "G: " + self._dol.__str__() + ", \nactive: " + self._basis_active.__str__() +\
                     ", \ntree:" + self._tree.__str__()

@@ -86,8 +86,12 @@ class Graph: # undirected, unweigheted graph
     def copy(self):
         return copy.deepcopy(self)
 
-    def Draw(self, **kwargs):
-        nx.draw(nx.from_dict_of_lists(self._dol), with_labels=True, **kwargs)
+    def Draw(self, how=None, **kwargs):
+        if how == 'circle':
+            pos = self.GetCirclePos()
+            nx.draw(nx.from_dict_of_lists(self._dol), with_labels=True, pos=pos, **kwargs)
+        else:
+            nx.draw(nx.from_dict_of_lists(self._dol), with_labels=True, **kwargs)
     def GetCirclePos(self):
         theta = 2 * np.pi / len(self._dol)
         keys = list(self._dol.keys())

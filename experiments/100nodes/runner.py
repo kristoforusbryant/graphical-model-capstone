@@ -30,7 +30,7 @@ pathIO = [ ('data/empty.dat', 'results/path_empty_samples.pkl'),
            ('data/random3.dat', 'results/path_random3_samples.pkl'), ]
 
 
-it = 10000
+it = 50000
 r, p = (100, .75)
 cob_freq = 100
 seed = 123

@@ -229,7 +229,7 @@ class MCMC_Summarizer():
                 with open(dirname + b_str  + '_' + g_str + '_adjm.pkl', 'wb') as handle:
                     pickle.dump(adjm, handle)
 
-                median_g = (adjm > .5).astype(int)
+                median_g = (adjm > .75).astype(int)
 
                 TP, TN, FP, FN = self._get_accuracies(g, median_g)
 

@@ -139,7 +139,6 @@ def run_config(data, conf):
     if seed:
         np.random.seed(seed)
     sampler.run(iter, init)
-
     sampler.save_object()
 
     return sampler

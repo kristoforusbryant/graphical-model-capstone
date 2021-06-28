@@ -9,7 +9,7 @@ config = OrderedDict({  'n': [20],
                         'init': ['empty', 'fixed'], #'complete',
                         'true_graph': ["empty", "circle", "random0", "random1", "random2", "random3"],
                         'prior': ['basis-count'],
-                        'basis': ['edge', 'hub'],
+                        'basis': ['hub', 'uniform', 'edge'],
                         'proposal': ['naive'],
                         'cob_freq': [100],
                         'iter': [int(1e4)],
@@ -26,6 +26,7 @@ def run(conf):
         g = pickle.load (handle)
 
     for burnin in [0, int(.1 * sampler.iter), int(.25 * sampler.iter)]:
+        print(f"saving to {config_to_path(conf)[:-4]}_burnin-{burnin}.short")
         with open(config_to_path(conf)[:-4] + f"_burnin-{burnin}.short", 'wb') as handle:
             pickle.dump(sampler.get_summary(g), handle)
 

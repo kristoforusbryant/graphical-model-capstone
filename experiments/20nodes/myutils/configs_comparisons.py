@@ -113,7 +113,7 @@ def compare_traces_short(configs, log=False, burnin=0):
     basis_traces = []
     init_bases = []
     for c in config_l:
-        with open(config_to_path(c)[-4] + f"_burnin-0.short", 'rb') as handle:
+        with open(config_to_path(c)[:-4] + f"_burnin-0.short", 'rb') as handle:
             sampler = pickle.load(handle)
         post_traces.append(sampler.posteriors)
         size_traces.append(sampler.sizes)

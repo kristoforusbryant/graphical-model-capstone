@@ -26,7 +26,7 @@ def run(conf):
         g = pickle.load (handle)
 
     for burnin in [0, int(.1 * sampler.iter), int(.25 * sampler.iter)]:
-        with open(config_to_path(conf)[-4] + f"_burnin-{burnin}.short", 'wb') as handle:
+        with open(config_to_path(conf)[:-4] + f"_burnin-{burnin}.short", 'wb') as handle:
             pickle.dump(sampler.get_summary(g), handle)
 
 pool = Pool()

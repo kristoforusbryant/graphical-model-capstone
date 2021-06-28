@@ -21,11 +21,13 @@ ALL_CONFIGS = OrderedDict({ 'n': [5],
                 'init': ['fixed', 'empty', 'complete', 'circle'],
                 'true_graph': 'empty',
                 'prior': ['basis-inclusion', 'basis-count'],
-                'basis': ['edge', 'hub'],
+                'basis': ['edge', 'hub', 'uniform'],
                 'proposal': ['naive', 'BD'],
                 'cob_freq': [None, 10, 100],
                 'iter': [int(1e4)],
                 'seed': 123 })
+
+from dists.TreePriors import Uniform, Hubs
 
 def config_to_path(config):
     path = "results/sampler"
@@ -67,7 +69,6 @@ def parse_init(conf):
         raise ValueError(f"Unrecognized value of conf['init']: {conf['init']}")
 
 def parse_prior(conf, Param):
-    from dists.TreePriors import Hubs
     from dists.CountPriors import TruncatedNB
     from dists.Priors import BasisInclusion, BasisCount
 
@@ -75,38 +76,58 @@ def parse_prior(conf, Param):
     if conf['prior'] == 'basis-inclusion':
         if conf['basis'] == 'edge':
             return BasisInclusion(n, Param, alpha=.5)
-        else:
+        elif conf['basis'] == 'hub':
             tree_prior = Hubs(n)
             return BasisInclusion(n, Param, alpha=.5, tree_prior=tree_prior)
-    elif conf['prior'] == 'basis-count':
-        if conf['basis'] == 'edge':
-            ct_prior = TruncatedNB(1, .5)
-            return BasisCount(n, Param, ct_prior)
+        elif conf['basis'] == 'uniform':
+            tree_prior = Uniform(n)
+            return BasisInclusion(n, Param, alpha=.5, tree_prior=tree_prior)
         else:
+            raise ValueError(f"Unrecognized value of conf['basis']: {conf['basis']}")
+
+    elif conf['prior'] == 'basis-count':
+        ct_prior = TruncatedNB(1, .5)
+        if conf['basis'] == 'edge':
+            return BasisCount(n, Param, ct_prior)
+        elif conf['basis'] == 'hub':
             ct_prior = TruncatedNB(1, .5)
             tree_prior = Hubs(n)
             return BasisCount(n, Param, ct_prior, tree_prior)
+        elif conf['basis'] == 'uniform':
+            ct_prior = TruncatedNB(1, .5)
+            tree_prior = Uniform(n)
+            return BasisCount(n, Param, ct_prior, tree_prior)
+        else:
+            raise ValueError(f"Unrecognized value of conf['basis']: {conf['basis']}")
     else:
         raise ValueError(f"Unrecognized value of conf['prior']: {conf['prior']}")
 
 
 def parse_proposal(conf, Param):
-    from dists.TreePriors import Hubs
     from dists.Proposals import BasisWalk, BasisBD
-
     n = conf['n']
     if conf['proposal'] == 'naive':
         if conf['basis'] == 'edge':
             return BasisWalk(n, Param)
-        else:
+        elif conf['basis'] == 'hub':
             tree_prior = Hubs(n)
             return BasisWalk(n, Param, tree_prior, conf['cob_freq'])
+        elif conf['basis'] == 'uniform':
+            tree_prior = Uniform(n)
+            return BasisWalk(n, Param, tree_prior, conf['cob_freq'])
+        else:
+            raise ValueError(f"Unrecognized value of conf['basis']: {conf['basis']}")
     elif conf['proposal'] == 'BD':
         if conf['basis'] == 'edge':
             return BasisBD(n, Param)
-        else:
+        elif conf['basis'] == 'hub':
             tree_prior = Hubs(n)
             return BasisBD(n, Param, tree_prior, conf['cob_freq'])
+        elif conf['basis'] == 'uniform':
+            tree_prior = Uniform(n)
+            return BasisBD(n, Param, tree_prior, conf['cob_freq'])
+        else:
+            raise ValueError(f"Unrecognized value of conf['basis']: {conf['basis']}")
     else:
         raise ValueError(f"Unrecognized value of conf['proposal']: {conf['proposal']}")
 

@@ -131,7 +131,8 @@ class MCMC_summary():
         self.bases = self._get_basis_ct(sampler)
         self.summary = self._get_summary(sampler)
 
-        self.accuracies = self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, alpha))
+        self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold)) \
+                            for threshold in [.25, .5, .75]]
 
     def _get_median_graph(self, sampler, true_g, alpha=.5):
         adjm = str_list_to_adjm(len(true_g), sampler.res['SAMPLES'])
@@ -200,6 +201,7 @@ class MCMC_summary():
         d['tree_accept_ct'] = len(set(change_tree).intersection(set(np.where(sampler.res['ACCEPT_INDEX'])[0])))
         d['max_posterior'] = np.max(posts)
         d['states_visited'] = len(np.unique(sampler.res['SAMPLES'][b:]))
+        d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b:]))
         d['time'] = sampler.time
 
         return d

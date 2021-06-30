@@ -156,37 +156,44 @@ class BasisBD:
         else:
             return self._temp
 
+    def _get_pdf(self, n_active, n_active_, n_bases): # q(p -> p_)
+        if n_active == 0 or n_active == n_bases: # guaranteed birth or death, respectively
+            return np.log(1) - np.log(n_bases)
+        elif n_active_ > n_active: # birth process
+            return np.log(self._alpha) - np.log(n_bases - n_active)
+        else: #death process
+            return np.log(1 - self._alpha) - np.log(n_active)
+
     def PDF_ratio(self, p_): # q(p_ -> p) / q(p -> p_)
-        if self._skip is None:
+        if self._skip is None or ((self.counter - 1) % self._skip != 0):
             n_active_ = np.sum(np.array(p_._basis_active, dtype=int))
-            if n_active_ == 0: # empty, hence p_ must be the result of death
-                n_active = n_active_ + 1
-                return np.log(1) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
-            elif n_active_ == len(p_._basis_active): # complete, hence p_ must be the result of birth
+            if self._temp in np.where(p_._basis_active == 1)[0]:
                 n_active = n_active_ - 1
-                return np.log(1) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
-            elif self._temp in np.where(p_._basis_active == 1)[0]: # p_ is result of birth, therefore p_ -> p is a death process
-                n_active = n_active_ - 1
-                return np.log(1 - self._alpha) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
-            else: # p_ is result of death, therefore p_ -> p is a birth process
+            else:
                 n_active = n_active_ + 1
-                return np.log(self._alpha) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
-        elif (self.counter - 1) % self._skip != 0:
-            n_active_ = np.sum(np.array(p_._basis_active, dtype=int))
-            if n_active_ == 0: # p_ must be the result of death
-                n_active = n_active_ + 1
-                return np.log(1) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
-            elif n_active_ == len(p_._basis_active): # p_ must be the result of birth
-                n_active = n_active_ - 1
-                return np.log(1) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
-            elif self._temp in np.where(p_._basis_active == 1)[0]: # p_ is result of birth, therefore p_ -> p is a death process
-                n_active = n_active_ - 1
-                return np.log(1 - self._alpha) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
-            else: # p_ is result of death, therefore p_ -> p is a birth process
-                n_active = n_active_ + 1
-                return np.log(self._alpha) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
+            n_bases = len(p_._basis_active)
+
+            return self._get_pdf(n_active_, n_active, n_bases) - self._get_pdf(n_active, n_active_, n_bases)
         else:
             return 0
+
+    # def PDF_ratio(self, p_): # q(p_ -> p) / q(p -> p_)
+    #     if self._skip is None or ((self.counter - 1) % self._skip != 0):
+    #         n_active_ = np.sum(np.array(p_._basis_active, dtype=int))
+    #         if n_active_ == 0: # p_ must be the result of death
+    #             n_active = n_active_ + 1
+    #             return np.log(1) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
+    #         elif n_active_ == len(p_._basis_active): # p_ must be the result of birth
+    #             n_active = n_active_ - 1
+    #             return np.log(1) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
+    #         elif self._temp in np.where(p_._basis_active == 1)[0]: # p_ is result of birth, therefore p_ -> p is a death process
+    #             n_active = n_active_ - 1
+    #             return np.log(1 - self._alpha) - np.log(n_active_) - (np.log(self._alpha) - np.log(len(p_._basis_active) - n_active))
+    #         else: # p_ is result of death, therefore p_ -> p is a birth process
+    #             n_active = n_active_ + 1
+    #             return np.log(self._alpha) - np.log(len(p_._basis_active) - n_active_) - (np.log(1 - self._alpha) - np.log(n_active))
+    #     else:
+    #         return 0
 
     def PDF(self, p, p_):
         return 0

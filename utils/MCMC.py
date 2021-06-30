@@ -187,8 +187,12 @@ class MCMC_summary():
 
     def _get_summary(self, sampler, b=0):
         posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
+        posts_ = np.array(sampler.res['LIK_'], dtype=float)[b:] + np.array(sampler.res['PRIOR_'], dtype=float)[b:]
         sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b:]
+        sizes_ = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['PARAMS_']))[b:]
         n_bases = self._get_basis_ct(sampler)[b:]
+        n_bases_ = [np.sum(self._str_to_int_list(sampler.res['PARAMS_PROPS'][i]['BASIS_ID'])) for i in range(sampler.iter)]
+
         trees = [pp['TREE_ID'] for pp in sampler.res['PARAMS_PROPS']]
         change_tree = np.where(list(map(lambda t, t_: t != t_, trees[:-1], trees[1:])))[0] + 1
 
@@ -196,6 +200,10 @@ class MCMC_summary():
         d['IAT_posterior'] = IAC_time(posts)
         d['IAT_sizes'] = IAC_time(sizes)
         d['IAT_bases'] = IAC_time(n_bases)
+
+        d['IAT_posterior_'] = IAC_time(posts_)
+        d['IAT_sizes_'] = IAC_time(sizes_)
+        d['IAT_bases_'] = IAC_time(n_bases_)
 
         d['accept_rate'] = np.sum(sampler.res['ACCEPT_INDEX']) / len(sampler.res['ACCEPT_INDEX'])
         d['tree_accept_ct'] = len(set(change_tree).intersection(set(np.where(sampler.res['ACCEPT_INDEX'])[0])))

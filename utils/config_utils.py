@@ -35,6 +35,11 @@ def config_to_path(config):
         path += f"_{k}-{config[k]}"
     return path + ".pkl"
 
+def get_sampler(config):
+    with open(config_to_path(config), 'rb') as handle:
+        sampler = pickle.load(handle)
+    return sampler
+
 def get_config_l(config):
     from itertools import product
     lol = []

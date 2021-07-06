@@ -5,9 +5,6 @@ Given a graph, simulate data coming from one precision matrix corresponding to t
 from utils.laplace_approximation import constrained_cov
 import numpy as np
 def generate_data(n, m, g, seed=None, threshold=.5, df=3):
-    if m == 0:
-        return np.zeros((2, n))
-
     if seed is not None:
         np.random.seed(seed)
 

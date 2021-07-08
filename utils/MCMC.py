@@ -122,14 +122,14 @@ import numpy as np
 from utils.diagnostics import IAC_time, str_list_to_adjm
 
 class MCMC_summary():
-    def __init__(self, sampler, true_g, alpha=.5):
+    def __init__(self, sampler, true_g, b=0, alpha=.5):
         self.time = sampler.time
         self.iter = sampler.iter
         self.last_params = sampler.last_params
         self.posteriors = np.array(sampler.res['LIK']) + np.array(sampler.res['PRIOR'])
         self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))
         self.bases = self._get_basis_ct(sampler)
-        self.summary = self._get_summary(sampler)
+        self.summary = self._get_summary(sampler, b)
 
         self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold)) \
                             for threshold in [.25, .5, .75]]

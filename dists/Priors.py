@@ -27,7 +27,8 @@ class BasisCount:
             param = self._Param(self._n, basis=self._basis)
 
         # the count is distributed as p_c
-        unscaled_p_c = np.array([self._prob_c(k) for k in range(param._basis.shape[1] + 1)])
+        ln_p_c = np.array([self._prob_c(k) for k in range(param._basis.shape[1] + 1)])
+        unscaled_p_c = np.exp(ln_p_c - np.max(ln_p_c))
         p_c = unscaled_p_c / np.sum(unscaled_p_c)
         count = np.random.choice(range(param._basis.shape[1] + 1), p=p_c)
 
@@ -39,7 +40,7 @@ class BasisCount:
         return param
 
     def PDF(self, param):
-        return np.log(self._prob_c(np.sum(np.array(param._basis_active, dtype=int))))
+        return self._prob_c(np.sum(np.array(param._basis_active, dtype=int)))
 
     def ParamType(self):
         return self._Param.__name__

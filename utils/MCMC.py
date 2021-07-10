@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.fromnumeric import size
 from tqdm import tqdm
 import time
 import pickle
@@ -122,14 +123,14 @@ import numpy as np
 from utils.diagnostics import IAC_time, str_list_to_adjm
 
 class MCMC_summary():
-    def __init__(self, sampler, true_g, b=0, alpha=.5):
+    def __init__(self, sampler, true_g, b=0, alpha=.5, inc_distances=True):
         self.time = sampler.time
         self.iter = sampler.iter
         self.last_params = sampler.last_params
         self.posteriors = np.array(sampler.res['LIK']) + np.array(sampler.res['PRIOR'])
         self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))
         self.bases = self._get_basis_ct(sampler)
-        self.summary = self._get_summary(sampler, b)
+        self.summary = self._get_summary(sampler, b, inc_distances=inc_distances)
 
         self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold)) \
                             for threshold in [.25, .5, .75]]
@@ -185,7 +186,18 @@ class MCMC_summary():
                 basis_ct.append(basis_ct[-1])
         return basis_ct
 
-    def _get_summary(self, sampler, b=0):
+    def _get_distances(self, str_list, dist, values_to_save=5000):
+        """diameter of a unique graph_id list according to specified dist: str * str -> int"""
+        from itertools import combinations
+        a = np.sort([ dist(s1, s2) for s1, s2 in combinations(str_list, 2) ])
+        n = a.shape[0]
+        if n <= 5000:
+            return a
+        else:
+            skip = (n - 1) // (values_to_save - 1)
+            return np.concatenate([a[np.arange(0, n - 1, skip)], [a[-1]]])
+
+    def _get_summary(self, sampler, b=0, inc_distances=True):
         posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
         posts_ = np.array(sampler.res['LIK_'], dtype=float)[b:] + np.array(sampler.res['PRIOR_'], dtype=float)[b:]
         sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b:]
@@ -208,8 +220,22 @@ class MCMC_summary():
         d['accept_rate'] = np.sum(sampler.res['ACCEPT_INDEX']) / len(sampler.res['ACCEPT_INDEX'])
         d['tree_accept_ct'] = len(set(change_tree).intersection(set(np.where(sampler.res['ACCEPT_INDEX'])[0])))
         d['max_posterior'] = np.max(posts)
+
         d['states_visited'] = len(np.unique(sampler.res['SAMPLES'][b:]))
         d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b:]))
+
+        if inc_distances:
+            from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
+            uniq = np.unique(sampler.res['SAMPLES'])
+            d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
+            d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
+            d['size_distances'] = self._get_distances(uniq, size_distance)
+
+            uniq_ = np.unique(sampler.res['PARAMS'])
+            d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
+            d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
+            d['size_distances_'] = self._get_distances(uniq_, size_distance)
+
         d['time'] = sampler.time
 
         return d

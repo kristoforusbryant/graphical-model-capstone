@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.fromnumeric import size
 from tqdm import tqdm
 import time
 import pickle
@@ -185,10 +186,16 @@ class MCMC_summary():
                 basis_ct.append(basis_ct[-1])
         return basis_ct
 
-    def _get_diam(self, str_list, dist):
+    def _get_distances(self, str_list, dist, values_to_save=5000):
         """diameter of a unique graph_id list according to specified dist: str * str -> int"""
         from itertools import combinations
-        return np.max([ dist(s1, s2) for s1, s2 in combinations(str_list, 2) ])
+        a = np.sort([ dist(s1, s2) for s1, s2 in combinations(str_list, 2) ])
+        n = a.shape[0]
+        if n <= 5000:
+            return a
+        else:
+            skip = (n - 1) // (values_to_save - 1)
+            return np.concatenate([a[np.arange(0, n - 1, skip)], [a[-1]]])
 
     def _get_summary(self, sampler, b=0):
         posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
@@ -213,13 +220,24 @@ class MCMC_summary():
         d['accept_rate'] = np.sum(sampler.res['ACCEPT_INDEX']) / len(sampler.res['ACCEPT_INDEX'])
         d['tree_accept_ct'] = len(set(change_tree).intersection(set(np.where(sampler.res['ACCEPT_INDEX'])[0])))
         d['max_posterior'] = np.max(posts)
+
         d['states_visited'] = len(np.unique(sampler.res['SAMPLES'][b:]))
         d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b:]))
+
+        from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
+        uniq = np.unique(sampler.res['SAMPLES'])
+        d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
+        d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
+        d['size_distances'] = self._get_distances(uniq, size_distance)
+
+        uniq_ = np.unique(sampler.res['PARAMS'])
+        d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
+        d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
+        d['size_distances_'] = self._get_distances(uniq_, size_distance)
+
         d['time'] = sampler.time
 
         return d
-
-
 
 
 import os

@@ -185,6 +185,11 @@ class MCMC_summary():
                 basis_ct.append(basis_ct[-1])
         return basis_ct
 
+    def _get_diam(self, str_list, dist):
+        """diameter of a unique graph_id list according to specified dist: str * str -> int"""
+        from itertools import combinations
+        return np.max([ dist(s1, s2) for s1, s2 in combinations(str_list, 2) ])
+
     def _get_summary(self, sampler, b=0):
         posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
         posts_ = np.array(sampler.res['LIK_'], dtype=float)[b:] + np.array(sampler.res['PRIOR_'], dtype=float)[b:]
@@ -213,6 +218,8 @@ class MCMC_summary():
         d['time'] = sampler.time
 
         return d
+
+
 
 
 import os

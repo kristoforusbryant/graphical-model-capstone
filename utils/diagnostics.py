@@ -86,3 +86,24 @@ def str_list_to_adjm(n, str_list):
 
 def str_list_to_median_graph(n, str_list, threshold=.5):
     return (str_list_to_adjm(n, str_list) > threshold).astype(int)
+
+"""Assumption: for all distances len(s1) == len(s2)"""
+def jaccard_distance(s1, s2):
+    A = set(np.where([ int(c) > 0 for c in s1])[0])
+    B = set(np.where([ int(c) > 0 for c in s2])[0])
+    A_cap_B = A.intersection(B)
+    return len(A_cap_B) / (len(A) + len(B) - len(A_cap_B))
+
+def overlap_coeff_distance(s1, s2):
+    A = set(np.where([ int(c) > 0 for c in s1])[0])
+    B = set(np.where([ int(c) > 0 for c in s2])[0])
+    A_cap_B = A.intersection(B)
+    return len(A_cap_B) / np.min(len(A), len(B))
+
+def hamming_distance(s1, s2):
+    return np.sum([ s1[i] != s2[i] for i in range(len(s1)) ])
+
+def size_distance(s1, s2):
+    ct1 = np.sum([ int(c) > 0 for c in s1])
+    ct2 = np.sum([ int(c) > 0 for c in s2])
+    return np.abs(ct1 - ct2)

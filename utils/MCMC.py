@@ -107,8 +107,8 @@ class MCMC_Sampler:
         self.last_params = params.copy()
         return 0
 
-    def get_summary(self, true_g):
-        return MCMC_summary(self, true_g)
+    def get_summary(self, true_g, b):
+        return MCMC_summary(self, true_g, b=b)
 
     def save_object(self):
         with open(self.outfile, 'wb') as handle:
@@ -201,7 +201,7 @@ class MCMC_summary():
         posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
         posts_ = np.array(sampler.res['LIK_'], dtype=float)[b:] + np.array(sampler.res['PRIOR_'], dtype=float)[b:]
         sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b:]
-        sizes_ = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['PARAMS_']))[b:]
+        sizes_ = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['PARAMS']))[b:]
         n_bases = self._get_basis_ct(sampler)[b:]
         n_bases_ = [np.sum(self._str_to_int_list(sampler.res['PARAMS_PROPS'][i]['BASIS_ID'])) for i in range(sampler.iter)]
 
@@ -227,11 +227,19 @@ class MCMC_summary():
         if inc_distances:
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
             uniq = np.unique(sampler.res['SAMPLES'])
+            if len(uniq) > 1000:
+                uniq = np.random.choice(np.unique(sampler.res['SAMPLES']), 1000, replace=False)
+                assert(len(uniq)) == 1000
+
             d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
             d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
             d['size_distances'] = self._get_distances(uniq, size_distance)
 
             uniq_ = np.unique(sampler.res['PARAMS'])
+            if len(uniq_) > 1000:
+                uniq_ = np.random.choice(np.unique(sampler.res['PARAMS']), 1000, replace=False)
+                assert(len(uniq_)) == 1000
+
             d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
             d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
             d['size_distances_'] = self._get_distances(uniq_, size_distance)

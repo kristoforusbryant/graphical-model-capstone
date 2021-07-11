@@ -226,12 +226,20 @@ class MCMC_summary():
 
         if inc_distances:
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
-            uniq = np.random.choice(np.unique(sampler.res['SAMPLES']), 1000) 
+            uniq = np.unique(sampler.res['SAMPLES'])
+            if len(uniq) > 1000:
+                uniq = np.random.choice(np.unique(sampler.res['SAMPLES']), 1000, replace=False)
+                assert(len(uniq)) == 1000
+
             d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
             d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
             d['size_distances'] = self._get_distances(uniq, size_distance)
 
-            uniq_ = np.random.choice(np.unique(sampler.res['PARAMS']), 1000)
+            uniq_ = np.unique(sampler.res['PARAMS'])
+            if len(uniq_) > 1000:
+                uniq_ = np.random.choice(np.unique(sampler.res['PARAMS']), 1000, replace=False)
+                assert(len(uniq_)) == 1000
+
             d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
             d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
             d['size_distances_'] = self._get_distances(uniq_, size_distance)

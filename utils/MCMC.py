@@ -107,8 +107,8 @@ class MCMC_Sampler:
         self.last_params = params.copy()
         return 0
 
-    def get_summary(self, true_g):
-        return MCMC_summary(self, true_g)
+    def get_summary(self, true_g, b):
+        return MCMC_summary(self, true_g, b=b)
 
     def save_object(self):
         with open(self.outfile, 'wb') as handle:
@@ -226,12 +226,12 @@ class MCMC_summary():
 
         if inc_distances:
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
-            uniq = np.unique(sampler.res['SAMPLES'])
+            uniq = np.random.choice(np.unique(sampler.res['SAMPLES']), 1000) 
             d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
             d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
             d['size_distances'] = self._get_distances(uniq, size_distance)
 
-            uniq_ = np.unique(sampler.res['PARAMS'])
+            uniq_ = np.random.choice(np.unique(sampler.res['PARAMS']), 1000)
             d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
             d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
             d['size_distances_'] = self._get_distances(uniq_, size_distance)

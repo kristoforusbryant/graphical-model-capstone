@@ -1,5 +1,6 @@
 import numpy as np
 from utils.generate_basis import cycle_basis, edge_basis
+from scipy import special
 
 class BasisCount:
     def __init__(self, n, Param, prob_c, tree_prior=None, basis=None):
@@ -39,8 +40,13 @@ class BasisCount:
 
         return param
 
+    def _chooseln(self, N, k):
+        return special.gammaln(N+1) - special.gammaln(N-k+1) - special.gammaln(k+1)
+
     def PDF(self, param):
-        return self._prob_c(np.sum(np.array(param._basis_active, dtype=int)))
+        size = np.sum(np.array(param._basis_active, dtype=int))
+        total_edges = len(param._basis_active)
+        return self._prob_c(size) - self._chooseln(total_edges, size)
 
     def ParamType(self):
         return self._Param.__name__

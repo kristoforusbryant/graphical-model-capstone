@@ -107,8 +107,8 @@ class MCMC_Sampler:
         self.last_params = params.copy()
         return 0
 
-    def get_summary(self, true_g, b):
-        return MCMC_summary(self, true_g, b=b)
+    def get_summary(self, true_g, b, inc_distances=True):
+        return MCMC_summary(self, true_g, b=b, inc_distances=inc_distances)
 
     def save_object(self):
         with open(self.outfile, 'wb') as handle:
@@ -226,20 +226,20 @@ class MCMC_summary():
 
         if inc_distances:
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
-            uniq = np.unique(sampler.res['SAMPLES'])
-            if len(uniq) > 1000:
-                uniq = np.random.choice(np.unique(sampler.res['SAMPLES']), 1000, replace=False)
-                assert(len(uniq)) == 1000
-
+            uniq = np.unique(sampler.res['SAMPLES'][:b])
+            if len(uniq) > 100:
+                uniq = np.random.choice(uniq, 100, replace=False)
+            
+            print('calculating distances accepted')
             d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
             d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
             d['size_distances'] = self._get_distances(uniq, size_distance)
 
-            uniq_ = np.unique(sampler.res['PARAMS'])
-            if len(uniq_) > 1000:
-                uniq_ = np.random.choice(np.unique(sampler.res['PARAMS']), 1000, replace=False)
-                assert(len(uniq_)) == 1000
+            uniq_ = np.unique(sampler.res['PARAMS'][:b])
+            if len(uniq_) > 100:
+                uniq_ = np.random.choice(uniq_, 100, replace=False)
 
+            print('calculating distances proposed')
             d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
             d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
             d['size_distances_'] = self._get_distances(uniq_, size_distance)

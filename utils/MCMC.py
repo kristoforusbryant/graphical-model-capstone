@@ -107,8 +107,8 @@ class MCMC_Sampler:
         self.last_params = params.copy()
         return 0
 
-    def get_summary(self, true_g, b, inc_distances=True):
-        return MCMC_summary(self, true_g, b=b, inc_distances=inc_distances)
+    def get_summary(self, true_g, b, inc_distances=True, thin=100):
+        return MCMC_summary(self, true_g, b=b, inc_distances=inc_distances, thin=thin)
 
     def save_object(self):
         with open(self.outfile, 'wb') as handle:
@@ -123,20 +123,20 @@ import numpy as np
 from utils.diagnostics import IAC_time, str_list_to_adjm
 
 class MCMC_summary():
-    def __init__(self, sampler, true_g, b=0, alpha=.5, inc_distances=True):
+    def __init__(self, sampler, true_g, b=0, alpha=.5, inc_distances=True, thin=100):
         self.time = sampler.time
         self.iter = sampler.iter
         self.last_params = sampler.last_params
-        self.posteriors = np.array(sampler.res['LIK']) + np.array(sampler.res['PRIOR'])
-        self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))
-        self.bases = self._get_basis_ct(sampler)
-        self.summary = self._get_summary(sampler, b, inc_distances=inc_distances)
+        self.posteriors = np.array(sampler.res['LIK'][b::thin]) + np.array(sampler.res['PRIOR'][b::thin])
+        self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES'][b::thin]))
+        self.bases = self._get_basis_ct(sampler)[b::thin]
+        self.summary = self._get_summary(sampler, b, inc_distances=inc_distances, thin=thin)
 
-        self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold)) \
+        self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold, b=b, thin=thin)) \
                             for threshold in [.25, .5, .75]]
 
-    def _get_median_graph(self, sampler, true_g, alpha=.5):
-        adjm = str_list_to_adjm(len(true_g), sampler.res['SAMPLES'])
+    def _get_median_graph(self, sampler, true_g, alpha=.5, b=0, thin=1):
+        adjm = str_list_to_adjm(len(true_g), sampler.res['SAMPLES'][b::thin])
         return (adjm > alpha).astype(int)
 
     def _get_basis_ct(self, sampler):
@@ -197,13 +197,13 @@ class MCMC_summary():
             skip = (n - 1) // (values_to_save - 1)
             return np.concatenate([a[np.arange(0, n - 1, skip)], [a[-1]]])
 
-    def _get_summary(self, sampler, b=0, inc_distances=True):
-        posts = np.array(sampler.res['LIK'], dtype=float)[b:] + np.array(sampler.res['PRIOR'], dtype=float)[b:]
-        posts_ = np.array(sampler.res['LIK_'], dtype=float)[b:] + np.array(sampler.res['PRIOR_'], dtype=float)[b:]
-        sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b:]
-        sizes_ = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['PARAMS']))[b:]
-        n_bases = self._get_basis_ct(sampler)[b:]
-        n_bases_ = [np.sum(self._str_to_int_list(sampler.res['PARAMS_PROPS'][i]['BASIS_ID'])) for i in range(sampler.iter)]
+    def _get_summary(self, sampler, b=0, inc_distances=True, thin=100):
+        posts = np.array(sampler.res['LIK'], dtype=float)[b::thin] + np.array(sampler.res['PRIOR'], dtype=float)[b::thin]
+        posts_ = np.array(sampler.res['LIK_'], dtype=float)[b::thin] + np.array(sampler.res['PRIOR_'], dtype=float)[b::thin]
+        sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b::thin]
+        sizes_ = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['PARAMS']))[b::thin]
+        n_bases = self._get_basis_ct(sampler)[b::thin]
+        n_bases_ = [np.sum(self._str_to_int_list(sampler.res['PARAMS_PROPS'][i]['BASIS_ID'])) for i in range(sampler.iter)][b::thin]
 
         trees = [pp['TREE_ID'] for pp in sampler.res['PARAMS_PROPS']]
         change_tree = np.where(list(map(lambda t, t_: t != t_, trees[:-1], trees[1:])))[0] + 1
@@ -221,28 +221,31 @@ class MCMC_summary():
         d['tree_accept_ct'] = len(set(change_tree).intersection(set(np.where(sampler.res['ACCEPT_INDEX'])[0])))
         d['max_posterior'] = np.max(posts)
 
-        d['states_visited'] = len(np.unique(sampler.res['SAMPLES'][b:]))
-        d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b:]))
+        d['states_visited'] = len(np.unique(sampler.res['SAMPLES'][b::thin]))
+        d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b::thin]))
 
         if inc_distances:
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
-            uniq = np.unique(sampler.res['SAMPLES'][:b])
-            if len(uniq) > 100:
-                uniq = np.random.choice(uniq, 100, replace=False)
-            
-            print('calculating distances accepted')
-            d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
-            d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
-            d['size_distances'] = self._get_distances(uniq, size_distance)
+            thinned = sampler.res['SAMPLES'][b::thin]
+            d['jaccard_distances'] = self._get_distances(thinned, jaccard_distance)
+            d['hamming_distances'] = self._get_distances(thinned, hamming_distance)
+            d['size_distances'] = self._get_distances(thinned, size_distance)
 
-            uniq_ = np.unique(sampler.res['PARAMS'][:b])
-            if len(uniq_) > 100:
-                uniq_ = np.random.choice(uniq_, 100, replace=False)
+            thinned_ = sampler.res['PARAMS'][b::thin]
+            d['jaccard_distances_'] = self._get_distances(thinned_, jaccard_distance)
+            d['hamming_distances_'] = self._get_distances(thinned_, hamming_distance)
+            d['size_distances_'] = self._get_distances(thinned_, size_distance)
 
-            print('calculating distances proposed')
-            d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
-            d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
-            d['size_distances_'] = self._get_distances(uniq_, size_distance)
+
+            uniq = np.unique(thinned)
+            d['jaccard_distances_uniq'] = self._get_distances(uniq, jaccard_distance)
+            d['hamming_distances_uniq'] = self._get_distances(uniq, hamming_distance)
+            d['size_distances_uniq'] = self._get_distances(uniq, size_distance)
+
+            uniq_ = np.unique(thinned_)
+            d['jaccard_distances_uniq_'] = self._get_distances(uniq_, jaccard_distance)
+            d['hamming_distances_uniq_'] = self._get_distances(uniq_, hamming_distance)
+            d['size_distances_uniq_'] = self._get_distances(uniq_, size_distance)
 
         d['time'] = sampler.time
 

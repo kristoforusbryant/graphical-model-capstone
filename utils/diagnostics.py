@@ -92,13 +92,19 @@ def jaccard_distance(s1, s2):
     A = set(np.where([ int(c) > 0 for c in s1])[0])
     B = set(np.where([ int(c) > 0 for c in s2])[0])
     A_cap_B = A.intersection(B)
-    return 1 - len(A_cap_B) / (len(A) + len(B) - len(A_cap_B))
+    if A_cap_B:
+        return 1 - len(A_cap_B) / (len(A) + len(B) - len(A_cap_B))
+    else:
+        return 1
 
 def overlap_coeff_distance(s1, s2):
     A = set(np.where([ int(c) > 0 for c in s1])[0])
     B = set(np.where([ int(c) > 0 for c in s2])[0])
     A_cap_B = A.intersection(B)
-    return 1 - len(A_cap_B) / np.min(len(A), len(B))
+    if A_cap_B:
+        return 1 - len(A_cap_B) / np.min(len(A), len(B))
+    else:
+        return 1
 
 def hamming_distance(s1, s2):
     return np.sum([ s1[i] != s2[i] for i in range(len(s1)) ])

@@ -190,12 +190,19 @@ class MCMC_summary():
         """diameter of a unique graph_id list according to specified dist: str * str -> int"""
         from itertools import combinations
         a = np.sort([ dist(s1, s2) for s1, s2 in combinations(str_list, 2) ])
-        n = a.shape[0]
-        if n <= 5000:
-            return a
-        else:
-            skip = (n - 1) // (values_to_save - 1)
-            return np.concatenate([a[np.arange(0, n - 1, skip)], [a[-1]]])
+        return a
+
+    def _get_generalised_variance(self, str_list):
+        X =  np.array([np.array(list(s), dtype=int) for s in str_list])
+        X = X - np.mean(X, axis=0)
+        cov = (np.transpose(X) @ X) / (X.shape[0] - 1)
+        return np.linalg.det(cov)
+
+    def _get_total_variance(self, str_list):
+        X = np.array([np.array(list(s), dtype=int) for s in str_list])
+        X = X - np.mean(X, axis=0)
+        cov = (np.transpose(X) @ X) / (X.shape[0] - 1)
+        return np.trace(cov)
 
     def _get_summary(self, sampler, b=0, inc_distances=True, thin=100):
         posts = np.array(sampler.res['LIK'], dtype=float)[b::thin] + np.array(sampler.res['PRIOR'], dtype=float)[b::thin]
@@ -226,6 +233,7 @@ class MCMC_summary():
 
         if inc_distances:
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
+
             thinned = sampler.res['SAMPLES'][b::thin]
             d['jaccard_distances'] = self._get_distances(thinned, jaccard_distance)
             d['hamming_distances'] = self._get_distances(thinned, hamming_distance)
@@ -236,7 +244,6 @@ class MCMC_summary():
             d['hamming_distances_'] = self._get_distances(thinned_, hamming_distance)
             d['size_distances_'] = self._get_distances(thinned_, size_distance)
 
-
             uniq = np.unique(thinned)
             d['jaccard_distances_uniq'] = self._get_distances(uniq, jaccard_distance)
             d['hamming_distances_uniq'] = self._get_distances(uniq, hamming_distance)
@@ -246,6 +253,12 @@ class MCMC_summary():
             d['jaccard_distances_uniq_'] = self._get_distances(uniq_, jaccard_distance)
             d['hamming_distances_uniq_'] = self._get_distances(uniq_, hamming_distance)
             d['size_distances_uniq_'] = self._get_distances(uniq_, size_distance)
+
+        d['gvar'] = self._get_generalised_variance(sampler.res['SAMPLES'][b::thin])
+        d['gvar_'] = self._get_generalised_variance(sampler.res['PARAMS'][b::thin])
+
+        d['tvar'] = self._get_total_variance(sampler.res['SAMPLES'][b::thin])
+        d['tvar_'] = self._get_total_variance(sampler.res['PARAMS'][b::thin])
 
         d['time'] = sampler.time
 

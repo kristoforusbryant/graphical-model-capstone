@@ -244,15 +244,15 @@ class MCMC_summary():
             d['hamming_distances_'] = self._get_distances(thinned_, hamming_distance)
             d['size_distances_'] = self._get_distances(thinned_, size_distance)
 
-            uniq = np.unique(thinned)
-            d['jaccard_distances_uniq'] = self._get_distances(uniq, jaccard_distance)
-            d['hamming_distances_uniq'] = self._get_distances(uniq, hamming_distance)
-            d['size_distances_uniq'] = self._get_distances(uniq, size_distance)
+            # uniq = np.unique(thinned)
+            # d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
+            # d['hamming_distances'] = self._get_distances(uniq, hamming_distance)
+            # d['size_distances'] = self._get_distances(uniq, size_distance)
 
-            uniq_ = np.unique(thinned_)
-            d['jaccard_distances_uniq_'] = self._get_distances(uniq_, jaccard_distance)
-            d['hamming_distances_uniq_'] = self._get_distances(uniq_, hamming_distance)
-            d['size_distances_uniq_'] = self._get_distances(uniq_, size_distance)
+            # uniq_ = np.unique(thinned_)
+            # d['jaccard_distances_'] = self._get_distances(uniq_, jaccard_distance)
+            # d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
+            # d['size_distances_'] = self._get_distances(uniq_, size_distance)
 
         d['gvar'] = self._get_generalised_variance(sampler.res['SAMPLES'][b::thin])
         d['gvar_'] = self._get_generalised_variance(sampler.res['PARAMS'][b::thin])

@@ -89,11 +89,15 @@ def str_list_to_median_graph(n, str_list, threshold=.5):
 
 """Assumption: for all distances len(s1) == len(s2)"""
 def jaccard_distance(s1, s2):
-    A = set(np.where([ int(c) > 0 for c in s1])[0])
-    B = set(np.where([ int(c) > 0 for c in s2])[0])
-    A_cap_B = A.intersection(B)
-    if A_cap_B:
-        return 1 - len(A_cap_B) / (len(A) + len(B) - len(A_cap_B))
+    A = np.array(list(s1), dtype=int)
+    B = np.array(list(s2), dtype=int)
+
+    A_size = A.sum()
+    B_size = B.sum()
+    intersection_size = np.logical_and(A, B).sum()
+
+    if A_size > 0 or B_size > 0:
+        return 1 - intersection_size / (A_size + B_size - intersection_size)
     else:
         return 1
 
@@ -110,6 +114,7 @@ def hamming_distance(s1, s2):
     return np.sum([ s1[i] != s2[i] for i in range(len(s1)) ])
 
 def size_distance(s1, s2):
-    ct1 = np.sum([ int(c) > 0 for c in s1])
-    ct2 = np.sum([ int(c) > 0 for c in s2])
-    return np.abs(ct1 - ct2)
+    A = np.array(list(s1), dtype=int)
+    B = np.array(list(s2), dtype=int)
+
+    return np.abs(A.sum() - B.sum())

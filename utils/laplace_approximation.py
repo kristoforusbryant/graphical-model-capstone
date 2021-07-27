@@ -510,7 +510,7 @@ double log_gwish_norm_laplace_cpp(
 # If the next line fails, then the compilations of the C++ code might have failed.
 log_gwish_norm_laplace_cpp = cppyy.gbl.log_gwish_norm_laplace_cpp
 
-def laplace_approx (G, delta, D, as_log_prob=True, diag=False):
+def laplace_approx(G, delta, D, as_log_prob=True, diag=False):
     """
     Log of Laplace approximation of G-Wishart normalization constant
 

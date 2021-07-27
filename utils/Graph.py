@@ -196,6 +196,21 @@ class Graph: # undirected, unweigheted graph
             self._dol[i] = list(set(self._dol[i]).union(other._dol[i]) -
                                set(self._dol[i]).intersection(other._dol[i]))
 
+    def GetClosestInCycleSpace(self, randomise=False):
+        """
+        Flip the minimum number of edges to land on the cycle space
+        """
+        g_ = self.copy()
+        odds = [k for k, l in g_._dol.items() if len(l) % 2 != 0]
+
+        if randomise:
+            np.random.shuffle(odds)
+
+        for i in range(len(odds) // 2):
+            g_.FlipEdge(odds[2*i], odds[2*i + 1])
+
+        return g_
+
     # Checking Graph Properties
     def IsEmpty(self):
         for _,l in self._dol.items():

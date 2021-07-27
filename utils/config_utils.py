@@ -70,6 +70,27 @@ def parse_init(conf):
     elif conf['init'] == 'circle':
         with open(f'data/graph_circle_{n}_{n_obs}.pkl', 'rb') as handle:
             return pickle.load(handle)
+    elif conf['init'] == 'ml_forest':
+        g = conf['true_graph']
+        data = np.loadtxt(f"data/{g}_{n}_{n_obs}.dat", delimiter=',')
+        if len(data.shape) == 1:
+            data = data.reshape(data.shape[0], 1)
+
+        from utils.ML_spanning_tree import ML_forest
+        T = ML_forest(data)
+        if conf['basis'] == 'edge':
+            return T
+        elif conf['basis'] == 'uniform' or conf['basis'] == 'hub' or conf['basis'] == 'path':
+            return T.GetClosestInCycleSpace()
+        else:
+            raise ValueError(f"Unrecognized value of conf['basis']: {conf['basis']}")
+    elif conf['init'] == 'conv_edges':
+        path_pref = f"results/sampler_n-{conf['n']}_n_obs-{conf['n_obs']}_init-empty_true_graph-{conf['true_graph']}_prior-{conf['prior']}_basis-edge"
+        import os
+        path = [s for s in os.listdir('results') if (path_pref in s) and ('iter-30000' in s) and ('.short' in s)][0]
+        with open(path, 'rb') as handle:
+            sampler = pickle.load(handle)
+        return sampler.last_params
     else:
         raise ValueError(f"Unrecognized value of conf['init']: {conf['init']}")
 
@@ -145,8 +166,24 @@ def parse_config(conf, Param):
 
     if conf['basis'] == 'edge':
         init = Param(len(init), init._dol)
-    else:
+    elif conf['basis'] == 'hub' or conf['basis'] == 'path':
         init = Param(len(init), init._dol, tree = prior._tree_prior.Sample())
+    elif conf['basis'] == 'uniform':
+        if conf['init'] == 'ml_forest':
+            n_obs = conf['n_obs']
+            g = conf['true_graph']
+            data = np.loadtxt(f"data/{g}_{n}_{n_obs}.dat", delimiter=',')
+            if len(data.shape) == 1:
+                data = data.reshape(data.shape[0], 1)
+
+            from utils.ML_spanning_tree import ML_spanning_tree
+            T, _ = ML_spanning_tree(data)
+            init = Param(len(init), init._dol, tree = T)
+        else:
+            init = Param(len(init), init._dol, tree = prior._tree_prior.Sample())
+
+    else:
+        raise ValueError(f"Unrecognized value of conf['basis']: {conf['basis']}")
 
     iter = conf['iter']
     seed = conf.get('seed', None)

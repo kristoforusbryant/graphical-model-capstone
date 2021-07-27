@@ -206,7 +206,7 @@ class Graph: # undirected, unweigheted graph
         if randomise:
             np.random.shuffle(odds)
 
-        for i in range(len(odds) % 2 == 0):
+        for i in range(len(odds) // 2):
             g_.FlipEdge(odds[2*i], odds[2*i + 1])
 
         return g_

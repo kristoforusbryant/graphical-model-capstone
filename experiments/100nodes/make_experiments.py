@@ -1,7 +1,7 @@
 from networkx.classes import graph
 from dists.Params import GraphAndBasis
 from dists.CountPriors import TruncatedNB
-from dists.Priors import BasisCount
+from dists.Priors import BasisCount, BasisInclusion
 from dists.TreePriors import Uniform
 from utils.generate_basis import circle_graph
 from tests.test_utils.generate_data import generate_data_and_save
@@ -32,9 +32,14 @@ print("Generating Graphs from the Cycle space complement...")
 random2 = GraphAndBasis(n, nx.to_dict_of_lists(nx.erdos_renyi_graph(n, .2, seed=123)))
 random3 = GraphAndBasis(n, nx.to_dict_of_lists(nx.barabasi_albert_graph(n, 2, seed=123)))
 
+prior = BasisInclusion(n, GraphAndBasis, alpha=.05, tree_prior=Uniform(n))
+np.random.seed(123)
+random4 = prior.Sample()
+random5 = prior.Sample()
+
 # List of graphs
-graphs = [empty, circle, random0, random1, random2, random3]
-graph_names = ['empty', 'circle', 'random0', 'random1', 'random2', 'random3']
+graphs = [empty, circle, random0, random1, random2, random3, random4, random5]
+graph_names = ['empty', 'circle', 'random0', 'random1', 'random2', 'random3', 'random4', 'random5']
 
 # Generate data
 for i in range(len(graphs)):

@@ -43,7 +43,8 @@ def ML_forest(data):
     S[np.triu_indices(n, k=1)] = scores
     S += np.transpose(S)
 
-    for i, j in T.edges:
+    edge_l = list(T.edges)
+    for i, j in edge_l:
         if S[i, j] < 0. :
             T.remove_edge(i, j)
 

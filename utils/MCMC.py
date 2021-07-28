@@ -127,16 +127,16 @@ class MCMC_summary():
         self.time = sampler.time
         self.iter = sampler.iter
         self.last_params = sampler.last_params
-        self.posteriors = np.array(sampler.res['LIK']) + np.array(sampler.res['PRIOR'])
-        self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))
-        self.bases = self._get_basis_ct(sampler)
+        self.posteriors = np.array(sampler.res['LIK'][b::thin]) + np.array(sampler.res['PRIOR'][b::thin])
+        self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES'][b::thin]))
+        self.bases = self._get_basis_ct(sampler)[b::thin]
         self.summary = self._get_summary(sampler, b, inc_distances=inc_distances, thin=thin)
 
-        self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold)) \
+        self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold, b=b, thin=thin)) \
                             for threshold in [.25, .5, .75]]
 
-    def _get_median_graph(self, sampler, true_g, alpha=.5):
-        adjm = str_list_to_adjm(len(true_g), sampler.res['SAMPLES'])
+    def _get_median_graph(self, sampler, true_g, alpha=.5, b=0, thin=1):
+        adjm = str_list_to_adjm(len(true_g), sampler.res['SAMPLES'][b::thin])
         return (adjm > alpha).astype(int)
 
     def _get_basis_ct(self, sampler):
@@ -228,8 +228,8 @@ class MCMC_summary():
         d['tree_accept_ct'] = len(set(change_tree).intersection(set(np.where(sampler.res['ACCEPT_INDEX'])[0])))
         d['max_posterior'] = np.max(posts)
 
-        d['states_visited'] = len(np.unique(sampler.res['SAMPLES'][b:]))
-        d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b:]))
+        d['states_visited'] = len(np.unique(sampler.res['SAMPLES'][b::thin]))
+        d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b::thin]))
 
         if inc_distances:
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
@@ -240,9 +240,9 @@ class MCMC_summary():
             d['size_distances'] = self._get_distances(thinned, size_distance)
 
             thinned_ = sampler.res['PARAMS'][b::thin]
-            d['jaccard_distances'] = self._get_distances(thinned_, jaccard_distance)
-            d['hamming_distances'] = self._get_distances(thinned_, hamming_distance)
-            d['size_distances'] = self._get_distances(thinned_, size_distance)
+            d['jaccard_distances_'] = self._get_distances(thinned_, jaccard_distance)
+            d['hamming_distances_'] = self._get_distances(thinned_, hamming_distance)
+            d['size_distances_'] = self._get_distances(thinned_, size_distance)
 
             # uniq = np.unique(thinned)
             # d['jaccard_distances'] = self._get_distances(uniq, jaccard_distance)
@@ -379,7 +379,7 @@ class MCMC_Summarizer():
                 with open(dirname + b_str  + '_' + g_str + '_adjm.pkl', 'wb') as handle:
                     pickle.dump(adjm, handle)
 
-                median_g = (adjm > .5).astype(int)
+                median_g = (adjm > .75).astype(int)
 
                 TP, TN, FP, FN = self._get_accuracies(g, median_g)
 

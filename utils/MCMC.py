@@ -107,8 +107,8 @@ class MCMC_Sampler:
         self.last_params = params.copy()
         return 0
 
-    def get_summary(self, true_g, b, inc_distances=True, thin=100):
-        return MCMC_summary(self, true_g, b=b, inc_distances=inc_distances, thin=thin)
+    def get_summary(self, true_g, b, inc_distances=True, thin=100, acc_scaled_size=None):
+        return MCMC_summary(self, true_g, b=b, inc_distances=inc_distances, thin=thin, acc_scaled_size=acc_scaled_size)
 
     def save_object(self):
         with open(self.outfile, 'wb') as handle:
@@ -123,14 +123,14 @@ import numpy as np
 from utils.diagnostics import IAC_time, str_list_to_adjm
 
 class MCMC_summary():
-    def __init__(self, sampler, true_g, b=0, alpha=.5, inc_distances=True, thin=100):
+    def __init__(self, sampler, true_g, b=0, alpha=.5, inc_distances=True, thin=100, acc_scaled_size=None):
         self.time = sampler.time
         self.iter = sampler.iter
         self.last_params = sampler.last_params
         self.posteriors = np.array(sampler.res['LIK'][b::thin]) + np.array(sampler.res['PRIOR'][b::thin])
         self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES'][b::thin]))
         self.bases = self._get_basis_ct(sampler)[b::thin]
-        self.summary = self._get_summary(sampler, b, inc_distances=inc_distances, thin=thin)
+        self.summary = self._get_summary(sampler, b, inc_distances=inc_distances, thin=thin, acc_scaled_size=acc_scaled_size)
 
         self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold, b=b, thin=thin)) \
                             for threshold in [.25, .5, .75]]
@@ -204,7 +204,7 @@ class MCMC_summary():
         cov = (np.transpose(X) @ X) / (X.shape[0] - 1)
         return np.trace(cov)
 
-    def _get_summary(self, sampler, b=0, inc_distances=True, thin=100):
+    def _get_summary(self, sampler, b=0, inc_distances=True, thin=100, acc_scaled_size=None):
         posts = np.array(sampler.res['LIK'], dtype=float)[b::thin] + np.array(sampler.res['PRIOR'], dtype=float)[b::thin]
         posts_ = np.array(sampler.res['LIK_'], dtype=float)[b::thin] + np.array(sampler.res['PRIOR_'], dtype=float)[b::thin]
         sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b::thin]
@@ -259,6 +259,31 @@ class MCMC_summary():
 
         d['tvar'] = self._get_total_variance(sampler.res['SAMPLES'][b::thin])
         d['tvar_'] = self._get_total_variance(sampler.res['PARAMS'][b::thin])
+
+        if acc_scaled_size:
+            cob_freq = sampler.prop._skip
+            accept_idx = np.where(sampler.res['ACCEPT_INDEX'])[0]
+            if cob_freq:
+                accept_idx = accept_idx[accept_idx % cob_freq != 0]
+            first_x_idx = accept_idx[:acc_scaled_size] + 1 # plus 1 for next proposed
+            last_x_idx = accept_idx[-acc_scaled_size:] + 1
+
+            first_x = sampler.res['PARAMS'][first_x_idx[:sampler.iter]] # Edge case where the last iteration is accepted (+1 cause out of index)
+            last_x = sampler.res['PARAMS'][last_x_idx[:sampler.iter]]
+
+            if inc_distances:
+                from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
+                d['jaccard_distances_start'] = self._get_distances(first_x, jaccard_distance)
+                d['jaccard_distances_end'] = self._get_distances(last_x, jaccard_distance)
+                d['hamming_distances_start'] = self._get_distances(first_x, hamming_distance)
+                d['hamming_distances_end'] = self._get_distances(last_x, hamming_distance)
+                d['size_distances_start'] = self._get_distances(first_x, size_distance)
+                d['size_distances_end'] = self._get_distances(last_x, size_distance)
+
+            d['as_start_gvar'] = self._get_generalised_variance(first_x)
+            d['as_end_gvar'] = self._get_generalised_variance(last_x)
+            d['as_start_tvar'] = self._get_total_variance(first_x)
+            d['as_end_tvar'] = self._get_total_variance(last_x)
 
         d['time'] = sampler.time
 

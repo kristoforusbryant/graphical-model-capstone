@@ -268,8 +268,12 @@ class MCMC_summary():
             first_x_idx = accept_idx[:acc_scaled_size] + 1 # plus 1 for next proposed
             last_x_idx = accept_idx[-acc_scaled_size:] + 1
 
-            first_x = sampler.res['PARAMS'][first_x_idx[:sampler.iter]] # Edge case where the last iteration is accepted (+1 cause out of index)
-            last_x = sampler.res['PARAMS'][last_x_idx[:sampler.iter]]
+             # Edge case where the last iteration is accepted (+1 cause out of index)
+            first_x_idx = first_x_idx[first_x_idx < sampler.iter]
+            last_x_idx = last_x_idx[last_x_idx < sampler.iter]
+
+            first_x = np.array(sampler.res['PARAMS'])[first_x_idx]
+            last_x = np.array(sampler.res['PARAMS'])[last_x_idx]
 
             if inc_distances:
                 from utils.diagnostics import jaccard_distance, hamming_distance, size_distance

@@ -216,6 +216,8 @@ class MCMC_summary():
         change_tree = np.where(list(map(lambda t, t_: t != t_, trees[:-1], trees[1:])))[0] + 1
 
         d = {}
+
+        print('Calculating IATs...')
         d['IAT_posterior'] = IAC_time(posts)
         d['IAT_sizes'] = IAC_time(sizes)
         d['IAT_bases'] = IAC_time(n_bases)
@@ -232,9 +234,11 @@ class MCMC_summary():
         d['states_considered'] = len(np.unique(sampler.res['PARAMS'][b::thin]))
 
         if inc_distances:
+            print('Calculating distances...')
             from utils.diagnostics import jaccard_distance, hamming_distance, size_distance
 
             thinned = sampler.res['SAMPLES'][b::thin]
+            print(len(thinned))
             d['jaccard_distances'] = self._get_distances(thinned, jaccard_distance)
             d['hamming_distances'] = self._get_distances(thinned, hamming_distance)
             d['size_distances'] = self._get_distances(thinned, size_distance)
@@ -254,6 +258,7 @@ class MCMC_summary():
             # d['hamming_distances_'] = self._get_distances(uniq_, hamming_distance)
             # d['size_distances_'] = self._get_distances(uniq_, size_distance)
 
+        print('Calculating variances...')
         d['gvar'] = self._get_generalised_variance(sampler.res['SAMPLES'][b::thin])
         d['gvar_'] = self._get_generalised_variance(sampler.res['PARAMS'][b::thin])
 
@@ -261,12 +266,17 @@ class MCMC_summary():
         d['tvar_'] = self._get_total_variance(sampler.res['PARAMS'][b::thin])
 
         if acc_scaled_size:
+            print('Calculating acc_scaled distances...')
+            print(f"acc_scaled_size: {acc_scaled_size}")
             cob_freq = sampler.prop._skip
             accept_idx = np.where(sampler.res['ACCEPT_INDEX'])[0]
             if cob_freq:
                 accept_idx = accept_idx[accept_idx % cob_freq != 0]
             first_x_idx = accept_idx[:acc_scaled_size] + 1 # plus 1 for next proposed
             last_x_idx = accept_idx[-acc_scaled_size:] + 1
+
+            print(first_x_idx.shape)
+            print(last_x_idx.shape)
 
              # Edge case where the last iteration is accepted (+1 cause out of index)
             first_x_idx = first_x_idx[first_x_idx < sampler.iter]
@@ -284,6 +294,7 @@ class MCMC_summary():
                 d['size_distances_start'] = self._get_distances(first_x, size_distance)
                 d['size_distances_end'] = self._get_distances(last_x, size_distance)
 
+            print('Calculating acc_scaled variances...')
             d['as_start_gvar'] = self._get_generalised_variance(first_x)
             d['as_end_gvar'] = self._get_generalised_variance(last_x)
             d['as_start_tvar'] = self._get_total_variance(first_x)

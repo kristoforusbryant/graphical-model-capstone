@@ -27,7 +27,7 @@ def get_summary(c, b=0, thin=1):
         summ = pickle.load(handle)
     return summ.summary
 
-def plot_distances(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1, uniq=False, proposed=False, plot=True):
+def plot_distances(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1, uniq=False, proposed=False, plot=False):
     n, n_obs = configs['n'],  configs['n_obs']
     fig, axs = plt.subplots(len(configs['true_graph']), 3, figsize=(3 * 10, len(configs['true_graph']) * 10))
     plt.rc('xtick',labelsize=30)
@@ -198,6 +198,165 @@ def compare_acceptance(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0,
 
     basis_names = [BETTER_NAMES[s] for s in basis_list]
     columns = pd.MultiIndex.from_product([['accept', 'accept_tree'], basis_names])
+    indexes = [BETTER_NAMES[s] for s in configs['true_graph']]
+    df = pd.DataFrame(data, index=indexes, columns=columns)
+
+    return df
+
+# Acceptance Scaled distances
+
+def plot_start(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1, plot=False):
+    n, n_obs = configs['n'],  configs['n_obs']
+    fig, axs = plt.subplots(len(configs['true_graph']), 3, figsize=(3 * 10, len(configs['true_graph']) * 10))
+    plt.rc('xtick',labelsize=30)
+    plt.rc('ytick',labelsize=30)
+
+    # Setting (shared) x and y labels
+    names = [BETTER_NAMES[s] for s in configs['true_graph']]
+
+    for i in range(len(configs['true_graph'])):
+        axs[i, 0].set_ylabel(names[i], size=50)
+
+    axs[0, 0].set_title('jaccard', size=50)
+    axs[0, 1].set_title('hamming', size=50)
+    axs[0, 2].set_title('sizes', size=50)
+
+    # Getting Ranges
+    jacc_max = [.0] * len(configs['true_graph'])
+    hamm_max = [.0] * len(configs['true_graph'])
+    size_max = [.0] * len(configs['true_graph'])
+    for basis in basis_list:
+        configs['basis'] = basis
+        config_l = get_config_l(configs)
+        summaries = [ get_summary(c, burnin, thin) for c in config_l ]
+
+        for i in range(len(summaries)):
+            if len(summaries[i]['jaccard_distances_start']) == 0:
+                print(config_to_path(config_l[i]))
+                summaries[i]['jaccard_distances_start'] = [0]
+            if len(summaries[i]['hamming_distances_start']) == 0:
+                print(config_to_path(config_l[i]))
+                summaries[i]['hamming_distances_start'] = [0]
+            if len(summaries[i]['size_distances_start']) == 0:
+                print(config_to_path(config_l[i]))
+                summaries[i]['size_distances_start'] = [0]
+
+            if np.max(summaries[i]['jaccard_distances_start']) * 100 > jacc_max[i]:
+                jacc_max[i] = np.max(summaries[i]['jaccard_distances_start']) * 100
+            if np.max(summaries[i]['hamming_distances_start']) > hamm_max[i]:
+                hamm_max[i] = np.max(summaries[i]['hamming_distances_start'])
+            if np.max(summaries[i]['size_distances_start']) > size_max[i]:
+                size_max[i] = np.max(summaries[i]['size_distances_start'])
+
+    # Plotting
+    for basis in basis_list:
+        configs['basis'] = basis
+        config_l = get_config_l(configs)
+        summaries = [ get_summary(c, burnin, thin) for c in config_l ]
+
+        for i in range(len(summaries)):
+            axs[i, 0].hist(summaries[i]['jaccard_distances_start'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
+            axs[i, 1].hist(summaries[i]['hamming_distances_start'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
+            axs[i, 2].hist(summaries[i]['size_distances_start'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+
+            axs[i, 0].legend(fontsize=30)
+            axs[i, 1].legend(fontsize=30)
+            axs[i, 2].legend(fontsize=30)
+
+    fig.savefig(f"as_start_distr_n-{n}_n_obs-{n_obs}.pdf")
+
+    if plot:
+        plt.show()
+
+    return fig
+
+def plot_end(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1, plot=False):
+    n, n_obs = configs['n'],  configs['n_obs']
+    fig, axs = plt.subplots(len(configs['true_graph']), 3, figsize=(3 * 10, len(configs['true_graph']) * 10))
+    plt.rc('xtick',labelsize=30)
+    plt.rc('ytick',labelsize=30)
+
+    # Setting (shared) x and y labels
+    names = [BETTER_NAMES[s] for s in configs['true_graph']]
+
+    for i in range(len(configs['true_graph'])):
+        axs[i, 0].set_ylabel(names[i], size=50)
+
+    axs[0, 0].set_title('jaccard', size=50)
+    axs[0, 1].set_title('hamming', size=50)
+    axs[0, 2].set_title('sizes', size=50)
+
+    # Getting Ranges
+    jacc_max = [.0] * len(configs['true_graph'])
+    hamm_max = [.0] * len(configs['true_graph'])
+    size_max = [.0] * len(configs['true_graph'])
+    for basis in basis_list:
+        configs['basis'] = basis
+        config_l = get_config_l(configs)
+        summaries = [ get_summary(c, burnin, thin) for c in config_l ]
+
+        for i in range(len(summaries)):
+            if len(summaries[i]['jaccard_distances_end']) == 0:
+                print(config_to_path(config_l[i]))
+                summaries[i]['jaccard_distances_end'] = [0]
+            if len(summaries[i]['hamming_distances_end']) == 0:
+                print(config_to_path(config_l[i]))
+                summaries[i]['hamming_distances_end'] = [0]
+            if len(summaries[i]['size_distances_end']) == 0:
+                print(config_to_path(config_l[i]))
+                summaries[i]['size_distances_end'] = [0]
+
+            if np.max(summaries[i]['jaccard_distances_end']) * 100 > jacc_max[i]:
+                jacc_max[i] = np.max(summaries[i]['jaccard_distances_end']) * 100
+            if np.max(summaries[i]['hamming_distances_end']) > hamm_max[i]:
+                hamm_max[i] = np.max(summaries[i]['hamming_distances_end'])
+            if np.max(summaries[i]['size_distances_end']) > size_max[i]:
+                size_max[i] = np.max(summaries[i]['size_distances_end'])
+
+    # Plotting
+    for basis in basis_list:
+        configs['basis'] = basis
+        config_l = get_config_l(configs)
+        summaries = [ get_summary(c, burnin, thin) for c in config_l ]
+
+        for i in range(len(summaries)):
+            axs[i, 0].hist(summaries[i]['jaccard_distances_end'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
+            axs[i, 1].hist(summaries[i]['hamming_distances_end'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
+            axs[i, 2].hist(summaries[i]['size_distances_end'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+
+            axs[i, 0].legend(fontsize=30)
+            axs[i, 1].legend(fontsize=30)
+            axs[i, 2].legend(fontsize=30)
+
+    fig.savefig(f"as_end_distr_n-{n}_n_obs-{n_obs}.pdf")
+
+    if plot:
+        plt.show()
+
+    return fig
+
+
+def get_as_vars(cl, b=0, thin=1):
+    summ = [ get_summary(c, b, thin) for c in cl ]
+    variances = [(round(x['as_start_tvar'], 3),  round(x['as_end_tvar'], 3)) for x in summ]
+    return variances
+
+def compare_as_variances(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1):
+    n, n_obs = configs['n'],  configs['n_obs']
+
+    nrows = len(configs['true_graph'])
+    ncols = len(basis_list) * 2
+    data = np.zeros((nrows, ncols))
+
+    for i in range(len(basis_list)):
+        configs['basis'] = basis_list[i]
+        config_l = get_config_l(configs)
+        vars = get_as_vars(config_l, burnin, thin)
+        data[:, i] = [ tup[0] for tup in vars ]
+        data[:, len(basis_list) + i] = [ tup[1] for tup in vars ]
+
+    basis_names = [BETTER_NAMES[s] for s in basis_list]
+    columns = pd.MultiIndex.from_product([['as_start_tvar', 'as_start_tvar'], basis_names])
     indexes = [BETTER_NAMES[s] for s in configs['true_graph']]
     df = pd.DataFrame(data, index=indexes, columns=columns)
 

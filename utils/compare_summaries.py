@@ -15,8 +15,10 @@ BETTER_NAMES = {'edge': 'edge',
                 'random1': 'cb_size_based1',
                 'random2': 'erdos-renyi',
                 'random3': 'scale-free',
-                'random4': 'cb_basis_inclusion0',
-                'random5': 'cb_basis_inclusion1'
+                'random4': 'large0',
+                'random5': 'large1',
+                'small0': 'small0',
+                'small1': 'small1'
                 }
 
 PERC_TO_IDX = {.25: 0, .5: 1, .75: 3}
@@ -255,9 +257,9 @@ def plot_start(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1,
         summaries = [ get_summary(c, burnin, thin) for c in config_l ]
 
         for i in range(len(summaries)):
-            axs[i, 0].hist(summaries[i]['jaccard_distances_start'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
-            axs[i, 1].hist(summaries[i]['hamming_distances_start'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
-            axs[i, 2].hist(summaries[i]['size_distances_start'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+            axs[i, 0].hist(summaries[i]['jaccard_distances_start'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5, density=True)
+            axs[i, 1].hist(summaries[i]['hamming_distances_start'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5, density=True)
+            axs[i, 2].hist(summaries[i]['size_distances_start'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5, density=True)
 
             axs[i, 0].legend(fontsize=30)
             axs[i, 1].legend(fontsize=30)
@@ -320,9 +322,9 @@ def plot_end(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1, p
         summaries = [ get_summary(c, burnin, thin) for c in config_l ]
 
         for i in range(len(summaries)):
-            axs[i, 0].hist(summaries[i]['jaccard_distances_end'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
-            axs[i, 1].hist(summaries[i]['hamming_distances_end'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
-            axs[i, 2].hist(summaries[i]['size_distances_end'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+            axs[i, 0].hist(summaries[i]['jaccard_distances_end'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5, density=True)
+            axs[i, 1].hist(summaries[i]['hamming_distances_end'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5, density=True)
+            axs[i, 2].hist(summaries[i]['size_distances_end'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5, density=True)
 
             axs[i, 0].legend(fontsize=30)
             axs[i, 1].legend(fontsize=30)
@@ -356,7 +358,7 @@ def compare_as_variances(configs, basis_list=['edge', 'hub', 'uniform'], burnin=
         data[:, len(basis_list) + i] = [ tup[1] for tup in vars ]
 
     basis_names = [BETTER_NAMES[s] for s in basis_list]
-    columns = pd.MultiIndex.from_product([['as_start_tvar', 'as_start_tvar'], basis_names])
+    columns = pd.MultiIndex.from_product([['as_start_tvar', 'as_end_tvar'], basis_names])
     indexes = [BETTER_NAMES[s] for s in configs['true_graph']]
     df = pd.DataFrame(data, index=indexes, columns=columns)
 

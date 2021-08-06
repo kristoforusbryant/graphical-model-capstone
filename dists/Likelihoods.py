@@ -3,7 +3,7 @@ from utils.G_Wishart import G_Wishart
 # works as long as Param has .GetDOL() function and ._dol property
 
 class GW:
-    def __init__(self, data, delta, D, Param):
+    def __init__(self, data, delta, D, Param, alpha=1):
         param = Param(D.shape[0])
         # GW: G-Wishart(G, delta, D)
         self.GW_prior = G_Wishart(param, delta, D)
@@ -12,6 +12,7 @@ class GW:
         D_star = D + self._U
         self.GW_posterior = G_Wishart(param, delta + data.shape[0], D_star)
         self._Param = Param
+        self._alpha = alpha
 
     def Move(self, param_):
         self.GW_prior.G.SetFromG(param_)
@@ -19,16 +20,16 @@ class GW:
         D_star = self._D + self._U
         self.GW_posterior.SetD(D_star)
 
-    def PDF(self, param_=None, alpha=1):
+    def PDF(self, param_=None):
         if param_ is not None:
             self.Move(param_)
-        return alpha * (self.GW_posterior.IG() - self.GW_prior.IG())# as log prob
+        return self._alpha * (self.GW_posterior.IG() - self.GW_prior.IG())# as log prob
 
     def ParamType(self):
         return self._Param.__name__
 
 class GW_LA:
-    def __init__(self, data, delta, D, Param):
+    def __init__(self, data, delta, D, Param, alpha=1):
         param = Param(D.shape[0])
         # GW: G-Wishart(G, delta, D)
         self.GW_prior = G_Wishart(param, delta, D)
@@ -37,6 +38,7 @@ class GW_LA:
         D_star = D + self._U
         self.GW_posterior = G_Wishart(param, delta + data.shape[0], D_star)
         self._Param = Param
+        self._alpha = alpha
 
     def Move(self, param_):
         self.GW_prior.G.SetFromG(param_)
@@ -44,10 +46,10 @@ class GW_LA:
         D_star = self._D + self._U
         self.GW_posterior.SetD(D_star)
 
-    def PDF(self, param_=None, alpha=1):
+    def PDF(self, param_=None):
         if param_ is not None:
             self.Move(param_)
-        return alpha * (self.GW_posterior.IG_LA() - self.GW_prior.IG_LA())# as log prob
+        return self._alpha * (self.GW_posterior.IG_LA() - self.GW_prior.IG_LA())# as log prob
 
     def ParamType(self):
         return self._Param.__name__

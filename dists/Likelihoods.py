@@ -1,5 +1,4 @@
 import numpy as np
-from utils.laplace_approximation import constrained_cov
 from utils.G_Wishart import G_Wishart
 # works as long as Param has .GetDOL() function and ._dol property
 
@@ -20,10 +19,10 @@ class GW:
         D_star = self._D + self._U
         self.GW_posterior.SetD(D_star)
 
-    def PDF(self, param_=None):
+    def PDF(self, param_=None, alpha=1):
         if param_ is not None:
             self.Move(param_)
-        return self.GW_posterior.IG() - self.GW_prior.IG()# as log prob
+        return alpha * (self.GW_posterior.IG() - self.GW_prior.IG())# as log prob
 
     def ParamType(self):
         return self._Param.__name__
@@ -45,10 +44,10 @@ class GW_LA:
         D_star = self._D + self._U
         self.GW_posterior.SetD(D_star)
 
-    def PDF(self, param_=None):
+    def PDF(self, param_=None, alpha=1):
         if param_ is not None:
             self.Move(param_)
-        return self.GW_posterior.IG_LA() - self.GW_prior.IG_LA()# as log prob
+        return alpha * (self.GW_posterior.IG_LA() - self.GW_prior.IG_LA())# as log prob
 
     def ParamType(self):
         return self._Param.__name__

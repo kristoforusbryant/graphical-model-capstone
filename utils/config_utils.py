@@ -190,12 +190,12 @@ def parse_config(conf, Param):
 
     return n, init, prior, prop, iter, seed
 
-def run_config(data, conf):
+def run_config(data, conf, temper=1):
     from dists.Params import GraphAndBasis as Param
 
     # Parsing
     n, init, prior, prop, iter, seed = parse_config(conf, Param)
-    lik = Likelihood(data, 3, np.eye(n), Param)
+    lik = Likelihood(data, 3, np.eye(n), Param, alpha=temper)
 
     sampler = MCMC_Sampler(prior, prop, lik, data, outfile=config_to_path(conf))
 

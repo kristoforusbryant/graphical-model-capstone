@@ -32,6 +32,8 @@ def generate_data(n, m, g, seed=None, threshold=.5, df=3):
     assert(np.linalg.det(C_star) > 0.) # positive definite
 
     data = np.random.multivariate_normal(np.zeros(n), C_star, m)
+    if m == 1:
+        data = data.reshape(1, n)
     return data
 
 def generate_data_and_save(n, m, g, outfile, **kwargs):

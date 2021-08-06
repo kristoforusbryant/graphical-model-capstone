@@ -92,21 +92,21 @@ def plot_distances(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thi
 
         for i in range(len(summaries)):
             if not uniq and not proposed:
-                axs[i, 0].hist(summaries[i]['jaccard_distances'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
-                axs[i, 1].hist(summaries[i]['hamming_distances'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
-                axs[i, 2].hist(summaries[i]['size_distances'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+                axs[i, 0].hist(summaries[i]['jaccard_distances'], bins=np.arange(jacc_max[i] + 1) / 100, label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 1].hist(summaries[i]['hamming_distances'], bins=np.arange(hamm_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 2].hist(summaries[i]['size_distances'], bins=np.arange(size_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
             elif uniq and not proposed:
-                axs[i, 0].hist(summaries[i]['jaccard_distances_uniq'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
-                axs[i, 1].hist(summaries[i]['hamming_distances_uniq'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
-                axs[i, 2].hist(summaries[i]['size_distances_uniq'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+                axs[i, 0].hist(summaries[i]['jaccard_distances_uniq'], bins=np.arange(jacc_max[i] + 1) / 100, label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 1].hist(summaries[i]['hamming_distances_uniq'], bins=np.arange(hamm_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 2].hist(summaries[i]['size_distances_uniq'], bins=np.arange(size_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
             elif proposed and not uniq:
-                axs[i, 0].hist(summaries[i]['jaccard_distances_'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
-                axs[i, 1].hist(summaries[i]['hamming_distances_'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
-                axs[i, 2].hist(summaries[i]['size_distances_'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+                axs[i, 0].hist(summaries[i]['jaccard_distances_'], bins=np.arange(jacc_max[i] + 1) / 100, label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 1].hist(summaries[i]['hamming_distances_'], bins=np.arange(hamm_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 2].hist(summaries[i]['size_distances_'], bins=np.arange(size_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
             else:
-                axs[i, 0].hist(summaries[i]['jaccard_distances_uniq_'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5)
-                axs[i, 1].hist(summaries[i]['hamming_distances_uniq_'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5)
-                axs[i, 2].hist(summaries[i]['size_distances_uniq_'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5)
+                axs[i, 0].hist(summaries[i]['jaccard_distances_uniq_'], bins=np.arange(jacc_max[i] + 1) / 100, label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 1].hist(summaries[i]['hamming_distances_uniq_'], bins=np.arange(hamm_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
+                axs[i, 2].hist(summaries[i]['size_distances_uniq_'], bins=np.arange(size_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5)
 
             axs[i, 0].legend(fontsize=30)
             axs[i, 1].legend(fontsize=30)
@@ -257,9 +257,9 @@ def plot_start(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1,
         summaries = [ get_summary(c, burnin, thin) for c in config_l ]
 
         for i in range(len(summaries)):
-            axs[i, 0].hist(summaries[i]['jaccard_distances_start'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5, density=True)
-            axs[i, 1].hist(summaries[i]['hamming_distances_start'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5, density=True)
-            axs[i, 2].hist(summaries[i]['size_distances_start'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5, density=True)
+            axs[i, 0].hist(summaries[i]['jaccard_distances_start'], bins=np.arange(jacc_max[i] + 1) / 100, label=BETTER_NAMES[basis], alpha=.5, density=True)
+            axs[i, 1].hist(summaries[i]['hamming_distances_start'], bins=np.arange(hamm_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5, density=True)
+            axs[i, 2].hist(summaries[i]['size_distances_start'], bins=np.arange(size_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5, density=True)
 
             axs[i, 0].legend(fontsize=30)
             axs[i, 1].legend(fontsize=30)
@@ -322,9 +322,9 @@ def plot_end(configs, basis_list=['edge', 'hub', 'uniform'], burnin=0, thin=1, p
         summaries = [ get_summary(c, burnin, thin) for c in config_l ]
 
         for i in range(len(summaries)):
-            axs[i, 0].hist(summaries[i]['jaccard_distances_end'], bins=np.arange(jacc_max[i] + 1) / 100, label=basis, alpha=.5, density=True)
-            axs[i, 1].hist(summaries[i]['hamming_distances_end'], bins=np.arange(hamm_max[i] + 1), label=basis, alpha=.5, density=True)
-            axs[i, 2].hist(summaries[i]['size_distances_end'], bins=np.arange(size_max[i] + 1), label=basis, alpha=.5, density=True)
+            axs[i, 0].hist(summaries[i]['jaccard_distances_end'], bins=np.arange(jacc_max[i] + 1) / 100, label=BETTER_NAMES[basis], alpha=.5, density=True)
+            axs[i, 1].hist(summaries[i]['hamming_distances_end'], bins=np.arange(hamm_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5, density=True)
+            axs[i, 2].hist(summaries[i]['size_distances_end'], bins=np.arange(size_max[i] + 1), label=BETTER_NAMES[basis], alpha=.5, density=True)
 
             axs[i, 0].legend(fontsize=30)
             axs[i, 1].legend(fontsize=30)

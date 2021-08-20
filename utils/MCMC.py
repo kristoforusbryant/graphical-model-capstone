@@ -127,12 +127,17 @@ class MCMC_summary():
         self.time = sampler.time
         self.iter = sampler.iter
         self.last_params = sampler.last_params
+        self.likelihoods = sampler.res['LIK']
         self.posteriors = np.array(sampler.res['LIK'][b::thin]) + np.array(sampler.res['PRIOR'][b::thin])
         self.sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES'][b::thin]))
         self.bases = self._get_basis_ct(sampler)[b::thin]
         self.summary = self._get_summary(sampler, b, inc_distances=inc_distances, thin=thin, acc_scaled_size=acc_scaled_size)
 
         self.accuracies = [self._get_accuracies(true_g, self._get_median_graph(sampler, true_g, threshold, b=b, thin=thin)) \
+                            for threshold in [.25, .5, .75]]
+        self.AUCs = [self._get_AUCs(true_g, self._get_median_graph(sampler, true_g, threshold, b=b, thin=thin)) \
+                            for threshold in [.25, .5, .75]]
+        self.F1s = [self._get_F1s(true_g, self._get_median_graph(sampler, true_g, threshold, b=b, thin=thin)) \
                             for threshold in [.25, .5, .75]]
 
     def _get_median_graph(self, sampler, true_g, alpha=.5, b=0, thin=1):
@@ -169,6 +174,20 @@ class MCMC_summary():
 
         return TP, TN, FP, FN
 
+    def _get_AUCs(self, g, md):
+        from sklearn.metrics import roc_auc_score
+        triu = np.triu_indices(len(g), 1)
+        try:
+            auc = roc_auc_score(g.GetBinaryL(), np.array(md[triu], dtype=bool))
+        except ValueError:
+            auc = np.nan
+        return auc
+
+    def _get_F1s(self, g, md):
+        from sklearn.metrics import f1_score
+        triu = np.triu_indices(len(g), 1)
+        return f1_score(g.GetBinaryL(), np.array(md[triu], dtype=bool))
+
     def _str_to_int_list(self, s):
         return np.array(list(s), dtype=int)
 
@@ -204,7 +223,7 @@ class MCMC_summary():
         cov = (np.transpose(X) @ X) / (X.shape[0] - 1)
         return np.trace(cov)
 
-    def _get_summary(self, sampler, b=0, inc_distances=True, thin=100, acc_scaled_size=None):
+    def _get_summary(self, sampler, b=0, inc_distances=True, thin=1, acc_scaled_size=None):
         posts = np.array(sampler.res['LIK'], dtype=float)[b::thin] + np.array(sampler.res['PRIOR'], dtype=float)[b::thin]
         posts_ = np.array(sampler.res['LIK_'], dtype=float)[b::thin] + np.array(sampler.res['PRIOR_'], dtype=float)[b::thin]
         sizes = list(map(lambda s: np.sum(self._str_to_int_list(s)), sampler.res['SAMPLES']))[b::thin]
@@ -227,6 +246,14 @@ class MCMC_summary():
         d['IAT_bases_'] = IAC_time(n_bases_)
 
         d['accept_rate'] = np.sum(sampler.res['ACCEPT_INDEX']) / len(sampler.res['ACCEPT_INDEX'])
+
+        n_bases_unthinned = self._get_basis_ct(sampler)[b:]
+        n_bases_unthinned_ = [np.sum(self._str_to_int_list(sampler.res['PARAMS_PROPS'][i]['BASIS_ID'])) for i in range(sampler.iter)][b:]
+        n_birth = np.sum((np.array(n_bases_unthinned)[1:] - np.array(n_bases_unthinned)[:-1]) == 1)
+        d['accept_birth'] = n_birth / (n_birth + np.sum((np.array(n_bases_unthinned_) - np.array(n_bases_unthinned)) == 1))
+        n_death = np.sum((np.array(n_bases_unthinned)[1:] - np.array(n_bases_unthinned)[:-1]) == -1)
+        d['accept_death'] = n_death / (n_death + np.sum((np.array(n_bases_unthinned_) - np.array(n_bases_unthinned)) == -1))
+
         d['tree_accept_ct'] = len(set(change_tree).intersection(set(np.where(sampler.res['ACCEPT_INDEX'])[0])))
         d['max_posterior'] = np.max(posts)
 
@@ -299,6 +326,9 @@ class MCMC_summary():
             d['as_end_gvar'] = self._get_generalised_variance(last_x)
             d['as_start_tvar'] = self._get_total_variance(first_x)
             d['as_end_tvar'] = self._get_total_variance(last_x)
+
+            d['first_x_idx'] = first_x_idx
+            d['last_x_idx'] = last_x_idx
 
         d['time'] = sampler.time
 

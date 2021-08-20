@@ -11,7 +11,7 @@ def BIC(i, j, n_obs, corr):
 def score_edges(data):
     n_obs, n = data.shape
     if n_obs == 0:
-        return [ 1 for i, j in zip(*np.triu_indices(n, k=1)) ]
+        return [ 1 for i, j in zip(*np.triu_indices(n, k=1)) ] #TODO: fix default for 0 and 1
     corr = np.corrcoef(np.transpose(data))
     return [ BIC(i, j, n_obs, corr) for i, j in zip(*np.triu_indices(n, k=1)) ]
 

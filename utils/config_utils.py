@@ -180,6 +180,15 @@ def parse_config(conf, Param):
             T, _ = ML_spanning_tree(data)
             init = Param(len(init), init._dol, tree = T)
         else:
+            # n_obs = conf['n_obs']
+            # g = conf['true_graph']
+            # data = np.loadtxt(f"data/{g}_{n}_{n_obs}.dat", delimiter=',')
+            # if len(data.shape) == 1:
+            #     data = data.reshape(data.shape[0], 1)
+
+            # from utils.ML_spanning_tree import ML_spanning_tree
+            # T, _ = ML_spanning_tree(data)
+            # init = Param(len(init), init._dol, tree = T)
             init = Param(len(init), init._dol, tree = prior._tree_prior.Sample())
 
     else:
@@ -190,12 +199,12 @@ def parse_config(conf, Param):
 
     return n, init, prior, prop, iter, seed
 
-def run_config(data, conf, temper=1):
+def run_config(data, conf):
     from dists.Params import GraphAndBasis as Param
 
     # Parsing
     n, init, prior, prop, iter, seed = parse_config(conf, Param)
-    lik = Likelihood(data, 3, np.eye(n), Param, alpha=temper)
+    lik = Likelihood(data, 3, np.eye(n), Param, alpha=conf['temper'])
 
     sampler = MCMC_Sampler(prior, prop, lik, data, outfile=config_to_path(conf))
 
